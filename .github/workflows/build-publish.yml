@@ -17,16 +17,15 @@ jobs:
   build:
     runs-on: ubuntu-latest
     env:
-      OIDC_PROVIDER: 'github_carmit_project_1'
-      OIDC_AUDIENCE: 'carmit_project_1'      
-      ARTIFACORY_HOST: 'https://carmittrial1.jfrog.io'
+      OIDC_PROVIDER: 'github-carmit-project-1'
+      OIDC_AUDIENCE: 'carmit_project_1'    
       PLATFORM_REPO: 'my-app-dev'
       IMAGE_NAME: 'carmit-example-image'
     steps:
       - name: Setup JFrog CLI
         uses: jfrog/setup-jfrog-cli@v3
         env:
-          JF_URL: ${{ARTIFACTORY_URL}}
+          JF_URL: ${{JF_URL}}
         with:
           oidc-provider-name: ${{OIDC_PROVIDER}}
           oidc-audience: ${{OIDC_AUDIENCE}}
