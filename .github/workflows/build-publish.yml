@@ -28,5 +28,5 @@ jobs:
         env:
           JF_URL: ${{ARTIFACTORY_URL}}
         with:
-            oidc-provider-name: ${{OIDC_PROVIDER}}
-            oidc-audience: ${{OIDC_AUDIENCE}}
+          oidc-provider-name: ${{OIDC_PROVIDER}}
+          oidc-audience: ${{OIDC_AUDIENCE}}
