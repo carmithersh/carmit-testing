@@ -10,9 +10,8 @@ jobs:
             id-token: write
         runs-on: ubuntu-latest
         steps:
-           - uses: jfrog/setup-jfrog-cli@v3
-             env:
-               JF_URL: https://carmittrial1.jfrog.io
-             with:
-                oidc-provider-name: github-carmit-project-1 
-                oidc-audience: carmit_project_1
+            - uses: jfrog/setup-jfrog-cli@v3
+              env:
+                  JF_URL: https://carmittrial1.jfrog.io
+              with:
+                  oidc-provider-name: github-carmit-project-1 
