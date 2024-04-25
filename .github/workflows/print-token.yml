@@ -27,7 +27,7 @@ jobs:
                     ID_TOKEN: ${{env.ID_TOKEN}}
                     ARTIFACTORY_URL: https://carmittrial1.jfrog.io
               run: |
-                    ACCESS_TOKEN=$(curl -XPOST "https://carmittrial1.jfrog.io/access/api/v1/oidc/token" -d "{\"grant_type\": \"urn:ietf:params:oauth:grant-type:token-exchange\", \"subject_token_type\":\"urn:ietf:params:oauth:token-type:access_token\", \"subject_token\": \"$ID_TOKEN\", \"provider_name\": \"github-carmit-project-1\"}" | jq .access_token | tr -d '"')
+                    ACCESS_TOKEN=$(curl -XPOST "https://carmittrial1.jfrog.io/access/api/v1/oidc/token" -H "content-type: application/json" -d "{\"grant_type\": \"urn:ietf:params:oauth:grant-type:token-exchange\", \"subject_token_type\":\"urn:ietf:params:oauth:token-type:access_token\", \"subject_token\": \"$ID_TOKEN\", \"provider_name\": \"github-carmit-project-1\"}" | jq .access_token | tr -d '"')
                     echo "ACCESS_TOKEN=${ACCESS_TOKEN}" >> $GITHUB_ENV
             
             
