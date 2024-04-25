@@ -1,4 +1,4 @@
-name: oidc-poc 
+name: oidc-poc-cli
 on:
     push:
         branches:
