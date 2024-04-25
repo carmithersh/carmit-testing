@@ -1,0 +1,32 @@
+name: 01 - Build and Tag Docker Image
+
+permissions:
+  actions: read # for detecting the Github Actions environment.
+  id-token: write # for creating OIDC tokens for signing.
+  packages: write # for uploading packages.
+  contents: read
+  checks: write        # Necessary to write reports
+  pull-requests: write # Necessary to comment on PRs
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      OIDC_PROVIDER: 'testing-github'
+      OIDC_AUDIENCE: 'carmithersh-github'      
+      ARTIFACORY_HOST: 'carmitintegration1.jfrogdev.org'
+      PLATFORM_REPO: 'my-app-dev'
+      IMAGE_NAME: 'carmit-example-image'
+    steps:
+      - name: Setup JFrog CLI
+        uses: jfrog/setup-jfrog-cli@v3
+        env:
+          JF_URL: ${{ARTIFACTORY_URL}}
+        with:
+            oidc-provider-name: ${{OIDC_PROVIDER}}
+            oidc-audience: ${{OIDC_AUDIENCE}}
