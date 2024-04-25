@@ -19,6 +19,9 @@ jobs:
                 echo "ID_TOKEN=${ID_TOKEN}"
                 echo "env: $GITHUB_ENV"
                 
+                curl -sLS -H "User-Agent: actions/oidc-client" -H "Authorization: Bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+                "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=carmit_project_1" | jq .value | tr -d '"'
+                
             - name: Exchange token with access
               env:
                     ID_TOKEN: ${{env.ID_TOKEN}}
