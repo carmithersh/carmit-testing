@@ -17,9 +17,9 @@ jobs:
   build:
     runs-on: ubuntu-latest
     env:
-      OIDC_PROVIDER: 'testing-github'
-      OIDC_AUDIENCE: 'carmithersh-github'      
-      ARTIFACORY_HOST: 'carmitintegration1.jfrogdev.org'
+      OIDC_PROVIDER: 'github_carmit_project_1'
+      OIDC_AUDIENCE: 'carmit_project_1'      
+      ARTIFACORY_HOST: 'https://carmittrial1.jfrog.io'
       PLATFORM_REPO: 'my-app-dev'
       IMAGE_NAME: 'carmit-example-image'
     steps:
@@ -30,3 +30,6 @@ jobs:
         with:
           oidc-provider-name: ${{OIDC_PROVIDER}}
           oidc-audience: ${{OIDC_AUDIENCE}}
+          
+      - name: Checkout the repository      
+        uses: actions/checkout@v4
