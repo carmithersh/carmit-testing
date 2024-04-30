@@ -10,8 +10,19 @@ jobs:
             id-token: write
         runs-on: ubuntu-latest
         steps:
-            - uses: jfrog/setup-jfrog-cli@v3
+            - name: Checkout the repository    
+              uses: actions/checkout@v4
+              
+            - name: Setup JFrog CLI
+              uses: jfrog/setup-jfrog-cli@v4
               env:
-                  JF_URL: https://carmittrial1.jfrog.io
+                JF_URL: ${{ secrets.JF_URL }} 
               with:
-                  oidc-provider-name: github-carmit-project-2
+                  oidc-provider-name: github-carmit-project-1
+                  
+            - name: Set up Docker Buildx
+              uses: docker/setup-buildx-action@v3
+
+            - name: build
+              run: |
+                echo "The first tag is ${{ steps.extracted_tag.outputs.first_tag }}"
