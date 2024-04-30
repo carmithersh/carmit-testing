@@ -15,4 +15,3 @@ jobs:
                   JF_URL: https://carmittrial1.jfrog.io/
               with:
                   oidc-provider-name: github-carmit-project-1 
-                  oidc-audience: carmit-project-1
