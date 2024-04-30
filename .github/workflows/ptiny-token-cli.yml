@@ -23,11 +23,9 @@ jobs:
             - name: Set up Docker Buildx
               uses: docker/setup-buildx-action@v3
 
-            - name: build
+            - name: build and push
               run: |
                 echo "The first tag is ${{ steps.extracted_tag.outputs.first_tag }}"
-                # Build Docker image
-                jf docker login carmittrial1.jfrog.io/docker-trial
-                echo "logged in?"
-                #jf docker buildx -t  carmittrial1.jfrog.io/docker-trial/test-image:1 .
+                # Build Docker image               
+                jf docker build -t  carmittrial1.jfrog.io/docker-trial/test-image:1 . --push
                 
