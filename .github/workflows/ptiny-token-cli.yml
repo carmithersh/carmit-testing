@@ -24,7 +24,7 @@ jobs:
               run: |
                echo "configure golang repo"
                jf config s
-               jf go-config --repo-resolve=golang-remote --repo-deploy=golang-local
+               jf go-config  --server-id-resolve setup-jfrog-cli-server --repo-resolve=golang-remote
             - name: build
               run: |
                echo "build go"
@@ -32,7 +32,7 @@ jobs:
             - name: publish
               run: |
                 echo "publish"
-                jf go-publish v1.0.0 --build-name=my-build --build-number=1
+                jf go-publish golang-local v1.0.0 --build-name=my-build --build-number=1 --server-id setup-jfrog-cli-server
             - name: build-info
               run: |
                 echo "build-info"
