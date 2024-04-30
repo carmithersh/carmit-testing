@@ -12,6 +12,6 @@ jobs:
         steps:
             - uses: jfrog/setup-jfrog-cli@v3
               env:
-                  JF_URL: https://carmittrial1.jfrog.io/
+                  JF_URL: https://carmittrial1.jfrog.io
               with:
                   oidc-provider-name: github-carmit-project-2
