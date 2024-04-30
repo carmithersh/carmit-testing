@@ -26,6 +26,9 @@ jobs:
             - name: build and push
               run: |
                 echo "The first tag is ${{ steps.extracted_tag.outputs.first_tag }}"
+                echo "ENV--------"
+                env
+                echo "ENV--------"
                 # Build Docker image               
                 jf docker build -t  carmittrial1.jfrog.io/docker-trial/test-image:1 . --push
                 
