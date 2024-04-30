@@ -26,3 +26,6 @@ jobs:
             - name: build
               run: |
                 echo "The first tag is ${{ steps.extracted_tag.outputs.first_tag }}"
+                # Build Docker image
+                jf docker buildx -t  carmittrial1.jfrog.io/docker-trial/test-image:1 .
+                
