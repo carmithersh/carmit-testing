@@ -4,7 +4,7 @@ on:
         branches:
             - '*'
 jobs:
-    auth:
+    build-publish-go:
         permissions:
             contents: read
             id-token: write
@@ -25,6 +25,12 @@ jobs:
                echo "configure golang repo"
                jf go-config --repo-resolve=golang-remote --repo-deploy=golang-local
                jf go build --build-name=my-build --build-number=1 
-               jf go-publish v1.0.0 --build-name=my-build --build-number=1
-               jf rt bce my-build 1
-               jf rt bp my-build 1
+            - name: publish
+              run: |
+                echo "publish"
+                jf go-publish v1.0.0 --build-name=my-build --build-number=1
+            - name: build-info
+              run: |
+                echo "build-info"
+                jf rt bce my-build 1
+                jf rt bp my-build 1
