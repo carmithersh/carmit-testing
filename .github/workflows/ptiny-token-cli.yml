@@ -23,7 +23,7 @@ jobs:
             - name: configure golang repo
               run: |
                echo "configure golang repo"
-               jf go-config --repo-resolve=<GO_RESOLVE_REPO> --repo-deploy=golang-remote
+               jf go-config --repo-resolve=golang-remote --repo-deploy=golang-local
                jf go build --build-name=my-build --build-number=1 
                jf go-publish v1.0.0 --build-name=my-build --build-number=1
                jf rt bce my-build 1
