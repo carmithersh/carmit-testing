@@ -52,7 +52,7 @@ jobs:
                 
             - name: publish project
               run: |
-                jf rt u dist/ python-virtual/example-projects/ --build-name=my-pip-build --build-number=1 --module=jfrog-python-example --project carmit-prj-1
+                jf rt u --spec=dist/* python-virtual/example-projects/ --build-name=my-pip-build --build-number=1 --module=jfrog-python-example --project carmit-prj-1
             - name: publish build info
               run: |
                 jf rt bce my-pip-build 1
