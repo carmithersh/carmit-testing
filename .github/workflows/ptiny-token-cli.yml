@@ -20,5 +20,12 @@ jobs:
               with:
                   oidc-provider-name: github-carmit-project-1
                   
-            - name: configure golang repo
-
+            - name: configure python
+              run: |
+                echo "configure python"
+                python --version
+                pip --version
+                wheel -h
+                pip show setuptools
+                
+            
