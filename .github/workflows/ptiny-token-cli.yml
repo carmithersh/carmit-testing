@@ -19,12 +19,14 @@ jobs:
                 JF_URL: ${{ secrets.JF_URL }} 
               with:
                   oidc-provider-name: github-carmit-project-1
-                  
-            - name: configure environment
+
+            - name: configure jfrog environment
               run: |
                 echo "verify jfrog cli"                
                 jf --version
-                jf pip-config --repo-resolve=python-virtual
+                jf pip-config --repo-resolve=python-virtual       
+            - name: configure environment
+              run: |               
                 echo "verify python"                
                 python --version
                 pip --version
