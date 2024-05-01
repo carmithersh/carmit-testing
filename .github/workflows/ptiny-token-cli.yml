@@ -39,9 +39,8 @@ jobs:
             - name: build project
               run: |
                 jf pip install -r requirements.txt --build-name=my-pip-build --build-number=1 --module=jfrog-python-example
-            - name: package project
-              run: |
                 python setup.py sdist bdist_wheel
+                
             - name: publish project
               run: |
                 jf rt u dist/ pypi/ --build-name=my-pip-build --build-number=1 --module=jfrog-python-example
