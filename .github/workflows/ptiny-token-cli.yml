@@ -17,6 +17,7 @@ jobs:
               uses: jfrog/setup-jfrog-cli@v4
               env:
                 JF_URL: ${{ secrets.JF_URL }} 
+                JFROG_CLI_LOG_LEVEL: DEBUG
               with:
                   oidc-provider-name: github-carmit-project-1
 
@@ -51,7 +52,7 @@ jobs:
                 
             - name: publish project
               run: |
-                jf rt u dist/ pypi/ --build-name=my-pip-build --build-number=1 --module=jfrog-python-example
+                jf rt u dist/ python-virtual/ --build-name=my-pip-build --build-number=1 --module=jfrog-python-example --project carmit-prj-1
             - name: publish build info
               run: |
                 jf rt bce my-pip-build 1
