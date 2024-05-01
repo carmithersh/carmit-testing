@@ -21,20 +21,4 @@ jobs:
                   oidc-provider-name: github-carmit-project-1
                   
             - name: configure golang repo
-              run: |
-               echo "configure golang repo"
-               jf config s
-               jf go-config  --server-id-resolve setup-jfrog-cli-server --repo-resolve=golang-remote --repo-deploy=golang-local
-            - name: build
-              run: |
-               echo "build go"
-               jf go build --build-name=my-build --build-number=1 
-            - name: publish
-              run: |
-                echo "publish"
-                jf go-publish v1.0.0 --build-name=my-build --build-number=1 
-            - name: build-info
-              run: |
-                echo "build-info"
-                jf rt bce my-build 1
-                jf rt bp my-build 1
+
