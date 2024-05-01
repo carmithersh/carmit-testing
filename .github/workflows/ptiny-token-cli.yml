@@ -58,7 +58,7 @@ jobs:
               run: |
                 jf rt bce my-pip-build 1
                 jf rt bp my-pip-build 1  --project carmit-prj-1
-                jf bs  my-pip-build 1  --project carmit-prj-1
+                jf bs  my-pip-build 1  
                 
                 
                 
