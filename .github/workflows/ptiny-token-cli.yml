@@ -20,13 +20,20 @@ jobs:
               with:
                   oidc-provider-name: github-carmit-project-1
                   
-            - name: configure python
+            - name: configure environment
               run: |
-                echo "configure python"
+                echo "verify jfrog cli"                
+                jf --version
+                jf pip-config --repo-resolve=python-virtual
+                echo "verify python"                
                 python --version
                 pip --version
+                echo "setup python"                
                 python3 -m pip install --upgrade pip setuptools wheel
                 wheel -h
                 pip show setuptools
+                echo $VIRTUAL_ENV
                 
-            
+            - name: build project
+              run: |
+              
