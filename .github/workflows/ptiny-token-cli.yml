@@ -42,6 +42,8 @@ jobs:
                 pwd
                 echo "ls"
                 ls -ltr 
+                echo "ls pythonExample"
+                ls -ltr  pythonExample
                 echo "install dependencies"
                 jf pip install -r requirements.txt --build-name=my-pip-build --build-number=1 --module=jfrog-python-example
                 echo "Build"
