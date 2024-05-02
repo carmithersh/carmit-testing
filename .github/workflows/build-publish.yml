@@ -15,7 +15,8 @@ jobs:
               
             - name: Setup JFrog CLI
               uses: jfrog/setup-jfrog-cli@v4
-              env:                
+              env: 
+                JF_URL: ${{ secrets.JF_URL }} 
                 JFROG_CLI_LOG_LEVEL: DEBUG
               with:
                   oidc-provider-name: github-carmit-project-1
