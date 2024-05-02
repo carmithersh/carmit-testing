@@ -1,34 +1,63 @@
-name: 01 - Build and Tag Docker Image
-
-permissions:
-  actions: read # for detecting the Github Actions environment.
-  id-token: write # for creating OIDC tokens for signing.
-  packages: write # for uploading packages.
-  contents: read
-  checks: write        # Necessary to write reports
-  pull-requests: write # Necessary to comment on PRs
-
+name: oidc-poc-cli
 on:
-  push:
-    tags:
-      - "v*.*.*"
-
+    push:
+        branches:
+            - '*'
 jobs:
-  build:
-    runs-on: ubuntu-latest
-    env:
-      OIDC_PROVIDER: 'github-carmit-project-1'
-      OIDC_AUDIENCE: 'carmit_project_1'    
-      PLATFORM_REPO: 'my-app-dev'
-      IMAGE_NAME: 'carmit-example-image'
-    steps:
-      - name: Setup JFrog CLI
-        uses: jfrog/setup-jfrog-cli@v3
-        env:
-          JF_URL: ${{JF_URL}}
-        with:
-          oidc-provider-name: ${{OIDC_PROVIDER}}
-          oidc-audience: ${{OIDC_AUDIENCE}}
-          
-      - name: Checkout the repository      
-        uses: actions/checkout@v4
+    build-publish-python:
+        permissions:
+            contents: read
+            id-token: write
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout the repository    
+              uses: actions/checkout@v4
+              
+            - name: Setup JFrog CLI
+              uses: jfrog/setup-jfrog-cli@v4
+              env:
+                JF_URL: ${{ secrets.JF_URL }} 
+                JFROG_CLI_LOG_LEVEL: DEBUG
+              with:
+                  oidc-provider-name: github-carmit-project-1
+
+            - name: configure jfrog environment
+              run: |
+                echo "verify jfrog cli"                
+                jf --version
+                jf pip-config --repo-resolve=python-virtual       
+            - name: configure environment
+              run: |               
+                echo "verify python"                
+                python --version
+                pip --version
+                echo "setup python"                
+                python3 -m pip install --upgrade pip setuptools wheel sigstore
+                wheel -h
+                pip show setuptools
+                echo $VIRTUAL_ENV
+                
+            - name: build project
+              run: |
+                echo "PWD"
+                pwd
+                echo "ls"
+                ls -ltr 
+                echo "ls pythonExample"
+                ls -ltr  pythonExample
+                echo "install dependencies"
+                jf pip install -r requirements.txt --build-name=my-pip-build --build-number=1 --module=jfrog-python-example
+                echo "Build"
+                python setup.py sdist bdist_wheel
+                cd dist && echo "hashes=$(sha256sum * | base64 -w0)" >> $GITHUB_OUTPUT
+                echo "$GITHUB_OUTPUT"
+            - name: publish project
+              run: |
+                jf rt u dist/ python-virtual/example-projects/ --build-name=my-pip-build --build-number=1 --module=jfrog-python-example --project carmit-prj-1
+            - name: publish build info
+              run: |
+                jf rt bce my-pip-build 1
+                jf rt bp my-pip-build 1  --project carmit-prj-1
+                
+                
+                
