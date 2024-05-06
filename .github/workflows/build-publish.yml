@@ -53,11 +53,11 @@ jobs:
                 echo "$GITHUB_OUTPUT"
             - name: publish project
               run: |
-                jf rt u dist/ python-virtual/example-projects/ --build-name=my-pip-build --build-number=1 --module=jfrog-python-example --project carmit-prj-1
+                jf rt u dist/ python-virtual/example-projects/ --build-name=my-pip-build --build-number=1 --module=jfrog-python-example --project ${{ vars.JF_PROJECT_KEY }} 
             - name: publish build info
               run: |
                 jf rt bce my-pip-build 1
-                jf rt bp my-pip-build 1  --project carmit-prj-1
+                jf rt bp my-pip-build 1  --project ${{ vars.JF_PROJECT_KEY }}
                 
                 
                 
