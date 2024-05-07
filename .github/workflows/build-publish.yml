@@ -58,8 +58,8 @@ jobs:
               run: |
                  jf docker login --password ${{ secrets.JF_DOCKER_TOKEN }} --username ${{ vars.JF_DOCKER_USER }}  ${{ vars.JF_URL }}
                  docker buildx build .   -t ${{ vars.JF_URL }}/docker-local/carmit-testing:3  -f Dockerfile
-                 jf docker scan ${{ vars.JF_URL }}/docker-local/carmit-testing:3 
-                 jf docker push ${{ vars.JF_URL }}/docker-local/carmit-testing:3 
+                 jf docker scan ${{ vars.JF_URL }}/docker-local/carmit-testing:3 --skip-login
+                 jf docker push ${{ vars.JF_URL }}/docker-local/carmit-testing:3 --skip-login
                  
             - name: publish build info
               run: |
