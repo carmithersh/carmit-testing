@@ -16,7 +16,7 @@ jobs:
             - name: Setup JFrog CLI
               uses: jfrog/setup-jfrog-cli@v4
               env: 
-                JF_URL: ${{ vars.JF_URL }} 
+                JF_URL: https://${{ vars.JF_URL }}/
                 JFROG_CLI_LOG_LEVEL: DEBUG
               with:
                   oidc-provider-name: github-carmit-project-1
@@ -56,9 +56,9 @@ jobs:
                 jf rt u dist/ python-virtual/example-projects/ --build-name=my-pip-build --build-number=1 --module=jfrog-python-example --project ${{ vars.JF_PROJECT_KEY }} 
             - name: build docker
               run: |
-                 docker buildx build .   -t ${{ vars.JF_URL }}docker-local/carmit-testing:3  -f Dockerfile
-                 jf docker scan ${{ vars.JF_URL }}docker-local/carmit-testing:3 
-                 jf docker push ${{ vars.JF_URL }}docker-local/carmit-testing:3 
+                 docker buildx build .   -t ${{ vars.JF_URL }}/docker-local/carmit-testing:3  -f Dockerfile
+                 jf docker scan ${{ vars.JF_URL }}/docker-local/carmit-testing:3 
+                 jf docker push ${{ vars.JF_URL }}/docker-local/carmit-testing:3 
                  
             - name: publish build info
               run: |
