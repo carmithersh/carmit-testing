@@ -69,7 +69,7 @@ jobs:
                 ACTIONS_STEP_DEBUG: true
                 JFROG_CLI_LOG_LEVEL: 'DEBUG'
               run: |
-                 docker buildx build .   -t ${{ vars.JF_URL }}/docker-local/carmit-testing:3  -f Dockerfile
+                 docker buildx build .   -t ${{ vars.JF_URL }}/docker-local/carmit-testing:3  -f Dockerfile --push
                  jf docker scan ${{ vars.JF_URL }}/docker-local/carmit-testing:3
                  jf docker push ${{ vars.JF_URL }}/docker-local/carmit-testing:3
                  
