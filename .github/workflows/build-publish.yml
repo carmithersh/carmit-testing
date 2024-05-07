@@ -63,13 +63,21 @@ jobs:
                 registry: ${{ vars.JF_URL }}
                 username: ${{ vars.JF_DOCKER_USER }} 
                 password: ${{ secrets.JF_DOCKER_TOKEN }} 
+    
                 
-            - name: build docker
+            - name: Build Docker image    
+              uses: docker/build-push-action@v5
+              id: build
+              with:
+                push: true
+                platforms: linux/amd64,linux/arm64
+                tags: ${{ vars.JF_URL }}/docker-local/carmit-testing:3
+                
+            - name: docker scan
               env:
                 ACTIONS_STEP_DEBUG: true
                 JFROG_CLI_LOG_LEVEL: 'DEBUG'
-              run: |
-                 docker buildx build .   -t ${{ vars.JF_URL }}/docker-local/carmit-testing:3  -f Dockerfile --push
+              run: |                
                  jf docker scan ${{ vars.JF_URL }}/docker-local/carmit-testing:3
                  jf docker push ${{ vars.JF_URL }}/docker-local/carmit-testing:3
                  
