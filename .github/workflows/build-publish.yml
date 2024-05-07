@@ -56,7 +56,7 @@ jobs:
                 jf rt u dist/ python-virtual/example-projects/ --build-name=my-pip-build --build-number=1 --module=jfrog-python-example --project ${{ vars.JF_PROJECT_KEY }} 
             - name: build docker
               run: |
-                 jf docker login -p${{ secrets.JF_ACCESS_TOKEN }} -u${{ secrets.JF_DOCKER_USER }}  ${{ vars.JF_URL }}
+                 jf docker login --password ${{ secrets.JF_ACCESS_TOKEN }} --username ${{ secrets.JF_DOCKER_USER }}  ${{ vars.JF_URL }}
                  docker buildx build .   -t ${{ vars.JF_URL }}/docker-local/carmit-testing:3  -f Dockerfile
                  jf docker scan ${{ vars.JF_URL }}/docker-local/carmit-testing:3 
                  jf docker push ${{ vars.JF_URL }}/docker-local/carmit-testing:3 
