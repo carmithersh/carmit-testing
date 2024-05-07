@@ -72,16 +72,14 @@ jobs:
                 push: false
                 platforms: linux/amd64
                 tags: ${{ vars.JF_URL }}/docker-local/carmit-testing:3
-
-            - name: docker images   
-              run: | 
-                docker images
+          
                 
             - name: docker scan
               env:
                 ACTIONS_STEP_DEBUG: true
                 JFROG_CLI_LOG_LEVEL: 'DEBUG'
-              run: |                     
+              run: |  
+                 jf docker pull ${{ vars.JF_URL }}/docker-local/carmit-testing:3
                  jf docker scan ${{ vars.JF_URL }}/docker-local/carmit-testing:3
                  
             - name: publish build info
