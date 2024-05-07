@@ -70,7 +70,7 @@ jobs:
               id: build
               with:
                 push: true
-                platforms: linux/amd64,linux/arm64
+                platforms: linux/amd64
                 tags: ${{ vars.JF_URL }}/docker-local/carmit-testing:3
                 
             - name: docker scan
@@ -79,7 +79,6 @@ jobs:
                 JFROG_CLI_LOG_LEVEL: 'DEBUG'
               run: |                
                  jf docker scan ${{ vars.JF_URL }}/docker-local/carmit-testing:3
-                 jf docker push ${{ vars.JF_URL }}/docker-local/carmit-testing:3
                  
             - name: publish build info
               run: |
