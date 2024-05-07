@@ -54,12 +54,24 @@ jobs:
             - name: publish project
               run: |
                 jf rt u dist/ python-virtual/example-projects/ --build-name=my-pip-build --build-number=1 --module=jfrog-python-example --project ${{ vars.JF_PROJECT_KEY }} 
+            - name: Set up Docker Buildx
+              uses: docker/setup-buildx-action@v3    
+                
+            - name: Authenticate Docker
+              uses: docker/login-action@v3
+              with:
+                registry: ${{ vars.JF_URL }}
+                username: ${{ vars.JF_DOCKER_USER }} 
+                password: ${{ secrets.JF_DOCKER_TOKEN }} 
+                
             - name: build docker
+              env:
+                ACTIONS_STEP_DEBUG: true
+                JFROG_CLI_LOG_LEVEL: 'DEBUG'
               run: |
-                 jf docker login --password ${{ secrets.JF_DOCKER_TOKEN }} --username ${{ vars.JF_DOCKER_USER }}  ${{ vars.JF_URL }}
                  docker buildx build .   -t ${{ vars.JF_URL }}/docker-local/carmit-testing:3  -f Dockerfile
-                 jf docker scan ${{ vars.JF_URL }}/docker-local/carmit-testing:3 --skip-login
-                 jf docker push ${{ vars.JF_URL }}/docker-local/carmit-testing:3 --skip-login
+                 jf docker scan ${{ vars.JF_URL }}/docker-local/carmit-testing:3
+                 jf docker push ${{ vars.JF_URL }}/docker-local/carmit-testing:3
                  
             - name: publish build info
               run: |
