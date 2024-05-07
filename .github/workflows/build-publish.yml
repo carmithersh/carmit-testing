@@ -69,7 +69,7 @@ jobs:
               uses: docker/build-push-action@v5
               id: build
               with:
-                push: false
+                push: true
                 platforms: linux/amd64
                 tags: ${{ vars.JF_URL }}/docker-local/carmit-testing:3
           
