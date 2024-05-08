@@ -9,6 +9,9 @@ jobs:
             contents: read
             id-token: write
         runs-on: ubuntu-latest
+        env:
+          DOCKER_REPO: 'docker-local'
+          IMAGE_NAME: 'carmit-testing:3'
         steps:
             - name: Checkout the repository    
               uses: actions/checkout@v4
@@ -51,7 +54,7 @@ jobs:
                 python setup.py sdist bdist_wheel
                 cd dist && echo "hashes=$(sha256sum * | base64 -w0)" >> $GITHUB_OUTPUT
                 echo "$GITHUB_OUTPUT"
-            - name: publish project
+            - name: publish python package
               run: |
                 jf rt u dist/ python-virtual/example-projects/ --build-name=my-pip-build --build-number=1 --module=jfrog-python-example --project ${{ vars.JF_PROJECT_KEY }} 
             - name: Set up Docker Buildx
@@ -71,16 +74,20 @@ jobs:
               with:
                 push: true
                 platforms: linux/amd64
-                tags: ${{ vars.JF_URL }}/docker-local/carmit-testing:3
+                tags: ${{ vars.JF_URL }}/${{ env.DOCKER_REPO }}/${{ env.IMAGE_NAME }}
           
                 
             - name: docker scan
-              env:
-                ACTIONS_STEP_DEBUG: true
-                JFROG_CLI_LOG_LEVEL: 'DEBUG'
               run: |  
-                 jf docker pull ${{ vars.JF_URL }}/docker-local/carmit-testing:3
-                 jf docker scan ${{ vars.JF_URL }}/docker-local/carmit-testing:3
+                 jf docker pull ${{ vars.JF_URL }}/${{ env.DOCKER_REPO }}/${{ env.IMAGE_NAME }}
+                 jf docker scan ${{ vars.JF_URL }}/${{ env.DOCKER_REPO }}/${{ env.IMAGE_NAME }}
+                 echo "metadata: ${{ needs.build.outputs.metadata }}"
+                 echo "image:  ${{ needs.build.outputs.image }} "
+                 echo "digest: ${{ needs.build.outputs.digest }} "
+
+            - name: add docker package to build
+              run: |  
+                 jf rt build-docker-create ${{ env.DOCKER_REPO }} --image-file ${{ needs.build.outputs.metadata }} --build-name my-pip-build --build-number 1
                  
             - name: publish build info
               run: |
