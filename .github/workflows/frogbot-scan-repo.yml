@@ -16,7 +16,7 @@ jobs:
         # The repository scanning will be triggered periodically on the following branches.
         branch: ["main"]
     steps:
-      - uses: carmithersh/frogbot-oidc@master
+      - uses: carmithersh/frogbot@master
         env:
           # [Mandatory]
           # JFrog platform URL
