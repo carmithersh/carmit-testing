@@ -82,12 +82,14 @@ jobs:
                  jf docker pull ${{ vars.JF_URL }}/${{ env.DOCKER_REPO }}/${{ env.IMAGE_NAME }}
                  jf docker scan ${{ vars.JF_URL }}/${{ env.DOCKER_REPO }}/${{ env.IMAGE_NAME }}
                  echo "metadata: ${{ steps.build.outputs.metadata }}"
-                 echo "image:  ${{ steps.build.outputs.image }} "
+                 echo "imageid:  ${{ steps.build.outputs.imageid }} "
                  echo "digest: ${{ steps.build.outputs.digest }} "
+                 
 
             - name: add docker package to build
               run: |  
-                 jf rt build-docker-create ${{ env.DOCKER_REPO }} --image-file ${{ needs.build.outputs.metadata }} --build-name my-pip-build --build-number 1
+                 echo "${{ env.DOCKER_REPO }}/${{ env.IMAGE_NAME }}@${{ steps.build.outputs.digest }}" > metadata.json
+                 jf rt build-docker-create ${{ env.DOCKER_REPO }} --image-file metadata.json --build-name my-pip-build --build-number 1
                  
             - name: publish build info
               run: |
