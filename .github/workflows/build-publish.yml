@@ -74,12 +74,12 @@ jobs:
             - name: add docker package to build
               run: |  
                  echo "${{ vars.JF_URL }}/${{ env.DOCKER_REPO }}/${{ env.IMAGE_NAME }}@${{ steps.build.outputs.digest }}" > metadata.json
-                 jf rt build-docker-create ${{ env.DOCKER_REPO }} --image-file metadata.json --build-name my-pip-build --build-number ${{ env.BUILD_NUMBER }} --project ${{ vars.JF_PROJECT_KEY }}
+                 jf rt build-docker-create ${{ env.DOCKER_REPO }} --image-file metadata.json --build-name ${{ env.BUILD_NAME }}  --build-number ${{ env.BUILD_NUMBER }} --project ${{ vars.JF_PROJECT_KEY }}
                  
             - name: publish build info
               run: |
                 jf rt bce ${{ env.BUILD_NAME }}  ${{ env.BUILD_NUMBER }} 
                 jf rt bp ${{ env.BUILD_NAME }}  ${{ env.BUILD_NUMBER }}  --project ${{ vars.JF_PROJECT_KEY }}
-                jf build-scan  --project ${{ vars.JF_PROJECT_KEY }} ${{ env.BUILD_NAME }}  ${{ env.BUILD_NUMBER }} 
+                jf build-scan  --fail false --format sarif --project ${{ vars.JF_PROJECT_KEY }} ${{ env.BUILD_NAME }}  ${{ env.BUILD_NUMBER }} 
                 
                 
