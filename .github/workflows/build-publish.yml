@@ -30,25 +30,16 @@ jobs:
                 jf --version
                 jf pip-config --repo-resolve=python-virtual       
             - name: configure environment
-              run: |               
-                echo "verify python"                
+              run: |                      
                 python --version
-                pip --version
-                echo "setup python"                
+                pip --version                
                 python3 -m pip install --upgrade pip setuptools wheel sigstore
                 wheel -h
                 pip show setuptools
                 echo $VIRTUAL_ENV
                 
             - name: build project
-              run: |
-                echo "PWD"
-                pwd
-                echo "ls"
-                ls -ltr 
-                echo "ls pythonExample"
-                ls -ltr  pythonExample
-                echo "install dependencies"
+              run: |                               
                 jf pip install -r requirements.txt --build-name=my-pip-build --build-number=2 --module=jfrog-python-example
                 echo "Build"
                 python setup.py sdist bdist_wheel
@@ -73,7 +64,7 @@ jobs:
               id: build
               with:
                 push: true
-                platforms: linux/amd64
+                platforms: linux/amd64, linux/arm64
                 tags: ${{ vars.JF_URL }}/${{ env.DOCKER_REPO }}/${{ env.IMAGE_NAME }}
           
                 
