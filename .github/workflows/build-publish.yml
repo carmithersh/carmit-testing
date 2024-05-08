@@ -81,9 +81,9 @@ jobs:
               run: |  
                  jf docker pull ${{ vars.JF_URL }}/${{ env.DOCKER_REPO }}/${{ env.IMAGE_NAME }}
                  jf docker scan ${{ vars.JF_URL }}/${{ env.DOCKER_REPO }}/${{ env.IMAGE_NAME }}
-                 echo "metadata: ${{ needs.build.outputs.metadata }}"
-                 echo "image:  ${{ needs.build.outputs.image }} "
-                 echo "digest: ${{ needs.build.outputs.digest }} "
+                 echo "metadata: ${{ steps.build.outputs.metadata }}"
+                 echo "image:  ${{ steps.build.outputs.image }} "
+                 echo "digest: ${{ steps.build.outputs.digest }} "
 
             - name: add docker package to build
               run: |  
