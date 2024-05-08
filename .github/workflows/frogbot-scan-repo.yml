@@ -19,6 +19,7 @@ jobs:
       - uses: carmithersh/frogbot@master
        #carmithersh/frogbot@master
         env:
+          ACTIONS_STEP_DEBUG: true
           # [Mandatory]
           # JFrog platform URL
           JF_URL: ${{ vars.JFROG_URL }}
