@@ -49,14 +49,14 @@ jobs:
                 echo "ls pythonExample"
                 ls -ltr  pythonExample
                 echo "install dependencies"
-                jf pip install -r requirements.txt --build-name=my-pip-build --build-number=1 --module=jfrog-python-example
+                jf pip install -r requirements.txt --build-name=my-pip-build --build-number=2 --module=jfrog-python-example
                 echo "Build"
                 python setup.py sdist bdist_wheel
                 cd dist && echo "hashes=$(sha256sum * | base64 -w0)" >> $GITHUB_OUTPUT
                 echo "$GITHUB_OUTPUT"
             - name: publish python package
               run: |
-                jf rt u dist/ python-virtual/example-projects/ --build-name=my-pip-build --build-number=1 --module=jfrog-python-example --project ${{ vars.JF_PROJECT_KEY }} 
+                jf rt u dist/ python-virtual/example-projects/ --build-name=my-pip-build --build-number=2 --module=jfrog-python-example --project ${{ vars.JF_PROJECT_KEY }} 
             - name: Set up Docker Buildx
               uses: docker/setup-buildx-action@v3    
                 
