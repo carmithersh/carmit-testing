@@ -80,6 +80,6 @@ jobs:
               run: |
                 jf rt bce ${{ env.BUILD_NAME }}  ${{ env.BUILD_NUMBER }} 
                 jf rt bp ${{ env.BUILD_NAME }}  ${{ env.BUILD_NUMBER }}  --project ${{ vars.JF_PROJECT_KEY }}
-                jf build-scan  --fail false --format sarif --project ${{ vars.JF_PROJECT_KEY }} ${{ env.BUILD_NAME }}  ${{ env.BUILD_NUMBER }} 
+                jf build-scan  --format sarif --project ${{ vars.JF_PROJECT_KEY }} ${{ env.BUILD_NAME }}  ${{ env.BUILD_NUMBER }} 
                 
                 
