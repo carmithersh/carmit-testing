@@ -14,7 +14,10 @@ jobs:
           IMAGE_NAME: 'carmit-testing:5'
           BUILD_NUMBER: 4
           BUILD_NAME: my-testing-build
-          
+          JF_URL: https://${{ vars.JF_URL }}/
+        outputs:
+          image: "${{ env.JF_URL }}/${{ env.DOCKER_REPO }}/${{ env.IMAGE_NAME }}"
+          digest: ${{ steps.build.outputs.digest }}
         steps:
             - name: Checkout the repository    
               uses: actions/checkout@v4
@@ -22,7 +25,7 @@ jobs:
             - name: Setup JFrog CLI
               uses: jfrog/setup-jfrog-cli@v4
               env: 
-                JF_URL: https://${{ vars.JF_URL }}/
+                JF_URL: ${{ env.JF_URL }}
               with:
                   oidc-provider-name: github-carmit-project-1
 
@@ -65,7 +68,7 @@ jobs:
                 push: true
                 platforms: linux/amd64, linux/arm64
                 tags: ${{ vars.JF_URL }}/${{ env.DOCKER_REPO }}/${{ env.IMAGE_NAME }}          
-                
+                        
             - name: docker scan
               run: |  
                  jf docker pull ${{ vars.JF_URL }}/${{ env.DOCKER_REPO }}/${{ env.IMAGE_NAME }}
@@ -82,3 +85,13 @@ jobs:
                 jf rt bp ${{ env.BUILD_NAME }}  ${{ env.BUILD_NUMBER }}  --project ${{ vars.JF_PROJECT_KEY }}
                 jf build-scan  --format sarif --fail=false --project ${{ vars.JF_PROJECT_KEY }}  ${{ env.BUILD_NAME }}  ${{ env.BUILD_NUMBER }} 
                 
+    provenance:
+      needs: [build-publish-python]
+      uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v1.10.0
+      with:
+        image:  ${{ needs.build-publish-python.outputs.image }}
+        digest: ${{ needs.build-publish-python.outputs.digest }}
+        private-repository: true
+      secrets:
+        registry-username: ${{ vars.JF_DOCKER_USER }} 
+        registry-password: ${{ secrets.JF_DOCKER_TOKEN }} 
