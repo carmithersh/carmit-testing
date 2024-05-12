@@ -13,7 +13,7 @@ jobs:
         
         runs-on: ubuntu-latest
         env:
-          DOCKER_REPO: 'docker-local2'
+          DOCKER_REPO: 'docker-local3'
           IMAGE_NAME: 'carmit-testing:6'
           BUILD_NUMBER: 4
           BUILD_NAME: my-testing-build
