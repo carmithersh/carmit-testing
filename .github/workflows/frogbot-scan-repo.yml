@@ -23,7 +23,7 @@ jobs:
           ACTIONS_STEP_DEBUG: true
           # [Mandatory]
           # JFrog platform URL
-          #JF_URL: https://carmittrial.jfrog.io/
+          JF_URL: https://carmittrial.jfrog.io/
           #${{ vars.JFROG_URL }}
 
           # [Mandatory if JF_USER and JF_PASSWORD are not provided]
