@@ -20,7 +20,6 @@ jobs:
       - uses: carmithersh/frogbot@master
         with:
           oidc-provider-name: github-carmit-project-1
-          oidc-audience: aaa
         env:
           ACTIONS_STEP_DEBUG: true
           # [Mandatory]
@@ -30,8 +29,6 @@ jobs:
           # [Mandatory if JF_USER and JF_PASSWORD are not provided]
           # JFrog access token with 'read' permissions on Xray service
           JF_ACCESS_TOKEN: ${{ secrets.JF_ACCESS_TOKEN }}
-          #OIDC_PROVIDER_NAME: github-carmit-project-1
-          
 
           # [Mandatory if JF_ACCESS_TOKEN is not provided]
           # JFrog username with 'read' permissions for Xray. Must be provided with JF_PASSWORD
