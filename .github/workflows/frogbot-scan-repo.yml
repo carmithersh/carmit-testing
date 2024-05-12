@@ -28,7 +28,7 @@ jobs:
           # [Mandatory if JF_USER and JF_PASSWORD are not provided]
           # JFrog access token with 'read' permissions on Xray service
           #JF_ACCESS_TOKEN: ${{ secrets.JF_ACCESS_TOKEN }}
-          OIDC_PROVIDER_NAME: github-carmit-project-1
+          OIDC_PROVIDER_NAME: github-carmit-project-3
           
 
           # [Mandatory if JF_ACCESS_TOKEN is not provided]
