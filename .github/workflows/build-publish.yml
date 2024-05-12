@@ -17,7 +17,7 @@ jobs:
           IMAGE_NAME: 'carmit-testing:6'
           BUILD_NUMBER: 4
           BUILD_NAME: my-testing-build
-          JF_URL: https://${{ vars.JF_URL }}/
+          PLATFORM_URL: https://${{ vars.JF_URL }}/
         outputs:
           image: "${{ vars.JF_URL }}/${{ env.DOCKER_REPO }}/${{ env.IMAGE_NAME }}"
           digest: ${{ steps.build.outputs.digest }}
@@ -28,7 +28,7 @@ jobs:
             - name: Setup JFrog CLI
               uses: jfrog/setup-jfrog-cli@v4
               env: 
-                JF_URL: ${{ env.JF_URL }}
+                JF_URL: ${{ env.PLATFORM_URL }}
               with:
                   oidc-provider-name: github-carmit-project-1
 
