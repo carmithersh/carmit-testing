@@ -19,7 +19,7 @@ jobs:
           BUILD_NAME: my-testing-build
           JF_URL: https://${{ vars.JF_URL }}/
         outputs:
-          image: "${{ vars.JF_URL }}${{ env.DOCKER_REPO }}/${{ env.IMAGE_NAME }}"
+          image: "${{ vars.JF_URL }}/${{ env.DOCKER_REPO }}/${{ env.IMAGE_NAME }}"
           digest: ${{ steps.build.outputs.digest }}
         steps:
             - name: Checkout the repository    
