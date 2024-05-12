@@ -20,6 +20,7 @@ jobs:
       - uses: carmithersh/frogbot@master
         with:
           oidc-provider-name: github-carmit-project-1
+          oidc-audience: aaa
         env:
           ACTIONS_STEP_DEBUG: true
           # [Mandatory]
