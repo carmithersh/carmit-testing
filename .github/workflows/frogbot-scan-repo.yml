@@ -18,6 +18,8 @@ jobs:
         branch: ["main"]
     steps:
       - uses: carmithersh/frogbot@master
+        with:
+          oidc-provider-name: github-carmit-project-1
         env:
           ACTIONS_STEP_DEBUG: true
           # [Mandatory]
