@@ -2,12 +2,13 @@ name: oidc-poc-cli
 on:
     push:
         branches:
-            - '*'
+
+permissions:
+  contents: read
+  id-token: write
 jobs:
     build-publish-python:
-        permissions:
-            contents: read
-            id-token: write
+        
         runs-on: ubuntu-latest
         env:
           DOCKER_REPO: 'docker-local'
@@ -84,7 +85,7 @@ jobs:
                 jf rt bce ${{ env.BUILD_NAME }}  ${{ env.BUILD_NUMBER }} 
                 jf rt bp ${{ env.BUILD_NAME }}  ${{ env.BUILD_NUMBER }}  --project ${{ vars.JF_PROJECT_KEY }}
                 jf build-scan  --format sarif --fail=false --project ${{ vars.JF_PROJECT_KEY }}  ${{ env.BUILD_NAME }}  ${{ env.BUILD_NUMBER }} 
-                
+            
     provenance:
       needs: [build-publish-python]
       uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v1.10.0
