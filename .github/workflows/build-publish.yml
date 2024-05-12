@@ -13,8 +13,8 @@ jobs:
         
         runs-on: ubuntu-latest
         env:
-          DOCKER_REPO: 'docker-local'
-          IMAGE_NAME: 'carmit-testing:5'
+          DOCKER_REPO: 'docker-local2'
+          IMAGE_NAME: 'carmit-testing:6'
           BUILD_NUMBER: 4
           BUILD_NAME: my-testing-build
           JF_URL: https://${{ vars.JF_URL }}/
