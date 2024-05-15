@@ -59,7 +59,7 @@ jobs:
                 
             - name: build project
               run: |                               
-                ./jfrog-clipip install -r requirements.txt --build-name=${{ env.BUILD_NAME }} --build-number=${{ env.BUILD_NUMBER }}  --module=jfrog-python-example
+                ./jfrog-cli pip install -r requirements.txt --build-name=${{ env.BUILD_NAME }} --build-number=${{ env.BUILD_NUMBER }}  --module=jfrog-python-example
                 python setup.py sdist bdist_wheel
                 cd dist && echo "hashes=$(sha256sum * | base64 -w0)" >> $GITHUB_OUTPUT
 
