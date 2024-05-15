@@ -12,8 +12,7 @@ jobs:
         env:
           DOCKER_REPO: 'docler-local3'
           IMAGE_NAME: 'carmit-testing:6'
-          JFROG_CLI_BUILD_PROJECT: carmit-prj-1
-          PLATFORM_URL: https://${{ vars.JF_URL }}/
+          JFROG_CLI_BUILD_PROJECT: carmit-prj-1         
         outputs:
           image: ${{ vars.JF_URL }}/${{ env.DOCKER_REPO }}/${{ env.IMAGE_NAME }}
           digest: ${{ steps.build.outputs.digest }}
@@ -24,7 +23,7 @@ jobs:
             - name: Setup JFrog CLI
               uses: jfrog/setup-jfrog-cli@v4
               env: 
-                JF_URL: ${{ env.PLATFORM_URL }}
+                JF_URL: https://${{ vars.JF_URL }}/
               with:
                   oidc-provider-name: github-carmit-project-1
 
