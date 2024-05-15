@@ -59,13 +59,13 @@ jobs:
                 
             - name: build project
               run: |                               
-                ./jfrog-cli pip install -r requirements.txt --build-name=${{ env.BUILD_NAME }} --build-number=${{ env.BUILD_NUMBER }}  --module=jfrog-python-example
+                ./jfrog-cli pip install -r requirements.txt  --module=jfrog-python-example
                 python setup.py sdist bdist_wheel
                 cd dist && echo "hashes=$(sha256sum * | base64 -w0)" >> $GITHUB_OUTPUT
 
             - name: publish python package
               run: |
-                ./jfrog-cli rt u dist/ python-virtual/example-projects/ --build-name=${{ env.BUILD_NAME }}  --build-number=${{ env.BUILD_NUMBER }}  --module=jfrog-python-example --project ${{ vars.JF_PROJECT_KEY }} 
+                ./jfrog-cli rt u dist/ python-virtual/example-projects/ --module=jfrog-python-example
 
             - name: Set up Docker Buildx
               uses: docker/setup-buildx-action@v3    
@@ -94,13 +94,13 @@ jobs:
             - name: add docker package to build
               run: |  
                  echo "${{ vars.JF_URL }}/${{ env.DOCKER_REPO }}/${{ env.IMAGE_NAME }}@${{ steps.build.outputs.digest }}" > metadata.json
-                 ./jfrog-cli rt build-docker-create ${{ env.DOCKER_REPO }} --image-file metadata.json --build-name ${{ env.BUILD_NAME }}  --build-number ${{ env.BUILD_NUMBER }} --project ${{ vars.JF_PROJECT_KEY }}
+                 ./jfrog-cli rt build-docker-create ${{ env.DOCKER_REPO }} --image-file metadata.json 
                  
             - name: publish build info
               run: |
-                ./jfrog-cli rt bce ${{ env.BUILD_NAME }}  ${{ env.BUILD_NUMBER }} 
-                ./jfrog-cli rt bp ${{ env.BUILD_NAME }}  ${{ env.BUILD_NUMBER }}  --project ${{ vars.JF_PROJECT_KEY }}
-                ./jfrog-cli build-scan  --format sarif --fail=false --project ${{ vars.JF_PROJECT_KEY }}  ${{ env.BUILD_NAME }}  ${{ env.BUILD_NUMBER }} 
+                ./jfrog-cli rt bce 
+                ./jfrog-cli rt bp
+                ./jfrog-cli build-scan  --format sarif --fail=false
             
     provenance:
       needs: [build-publish-python]
