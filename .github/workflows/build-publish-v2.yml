@@ -33,7 +33,7 @@ jobs:
               uses: actions/checkout@v4
               with:
                 repository: "eyaldelarea/jfrog-cli"
-                ref: "github_job_summary"
+                ref: "dev"
                 
             - name: Build current CLI
               run: go build .
