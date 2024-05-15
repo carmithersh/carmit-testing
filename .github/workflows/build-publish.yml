@@ -64,7 +64,7 @@ jobs:
               #  password: ${{ secrets.JF_DOCKER_TOKEN }} 
             - name: docker login
               run: |  
-                 jf docker login ${{ vars.JF_URL }}
+                 jf docker login ${{ vars.JF_URL }}/${{ env.DOCKER_REPO }}
                 
             - name: Build Docker image    
               uses: docker/build-push-action@v5
