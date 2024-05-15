@@ -62,9 +62,9 @@ jobs:
             #    registry: ${{ vars.JF_URL }}
              #   username: ${{ vars.JF_DOCKER_USER }} 
               #  password: ${{ secrets.JF_DOCKER_TOKEN }} 
-            - name: docker scan
+            - name: docker login
               run: |  
-                 jf docker login 
+                 jf docker login ${{ vars.JF_URL }}
                 
             - name: Build Docker image    
               uses: docker/build-push-action@v5
