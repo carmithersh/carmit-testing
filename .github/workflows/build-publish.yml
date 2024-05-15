@@ -16,9 +16,9 @@ jobs:
           DOCKER_REPO: 'docler-local3'
           IMAGE_NAME: 'carmit-testing:6'
           JFROG_CLI_BUILD_PROJECT: carmit-prj-1
-          PLATFORM_URL: https://${{ vars.JF_URL }}/
+          PLATFORM_URL: https://${{ secrets.JF_URL }}/
         outputs:
-          image: "${{ vars.JF_URL }}/${{ env.DOCKER_REPO }}/${{ env.IMAGE_NAME }}"
+          image: "${{ secrets.JF_URL }}/${{ env.DOCKER_REPO }}/${{ env.IMAGE_NAME }}"
           digest: ${{ steps.build.outputs.digest }}
         steps:
             - name: Checkout the repository    
@@ -58,12 +58,12 @@ jobs:
             #- name: Authenticate Docker
             #  uses: docker/login-action@v3
             # # with:
-            #    registry: ${{ vars.JF_URL }}
+            #    registry: ${{ secrets.JF_URL }}
              #   username: ${{ vars.JF_DOCKER_USER }} 
               #  password: ${{ secrets.JF_DOCKER_TOKEN }} 
             - name: docker login
               run: |  
-                 jf docker login ${{ vars.JF_URL }}/${{ env.DOCKER_REPO }}
+                 jf docker login ${{ secrets.JF_URL }}/${{ env.DOCKER_REPO }}
                 
             - name: Build Docker image    
               uses: docker/build-push-action@v5
@@ -71,16 +71,16 @@ jobs:
               with:
                 push: true
                 platforms: linux/amd64, linux/arm64
-                tags: ${{ vars.JF_URL }}/${{ env.DOCKER_REPO }}/${{ env.IMAGE_NAME }}          
+                tags: ${{ secrets.JF_URL }}/${{ env.DOCKER_REPO }}/${{ env.IMAGE_NAME }}          
                         
             - name: docker scan
               run: |  
-                 jf docker pull ${{ vars.JF_URL }}/${{ env.DOCKER_REPO }}/${{ env.IMAGE_NAME }}
-                 jf docker scan ${{ vars.JF_URL }}/${{ env.DOCKER_REPO }}/${{ env.IMAGE_NAME }}                               
+                 jf docker pull ${{ secrets.JF_URL }}/${{ env.DOCKER_REPO }}/${{ env.IMAGE_NAME }}
+                 jf docker scan ${{ secrets.JF_URL }}/${{ env.DOCKER_REPO }}/${{ env.IMAGE_NAME }}                               
 
             - name: add docker package to build
               run: |  
-                 echo "${{ vars.JF_URL }}/${{ env.DOCKER_REPO }}/${{ env.IMAGE_NAME }}@${{ steps.build.outputs.digest }}" > metadata.json
+                 echo "${{ secrets.JF_URL }}/${{ env.DOCKER_REPO }}/${{ env.IMAGE_NAME }}@${{ steps.build.outputs.digest }}" > metadata.json
                  jf rt build-docker-create ${{ env.DOCKER_REPO }} --image-file metadata.json 
                  
             - name: publish build info
