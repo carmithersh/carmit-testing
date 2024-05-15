@@ -15,8 +15,7 @@ jobs:
         env:
           DOCKER_REPO: 'docler-local3'
           IMAGE_NAME: 'carmit-testing:6'
-          BUILD_NUMBER: 4
-          BUILD_NAME: my-testing-build
+          JFROG_CLI_BUILD_PROJECT: carmit-prj-1
           PLATFORM_URL: https://${{ vars.JF_URL }}/
         outputs:
           image: "${{ vars.JF_URL }}/${{ env.DOCKER_REPO }}/${{ env.IMAGE_NAME }}"
@@ -45,13 +44,13 @@ jobs:
                 
             - name: build project
               run: |                               
-                jf pip install -r requirements.txt --build-name=${{ env.BUILD_NAME }} --build-number=${{ env.BUILD_NUMBER }}  --module=jfrog-python-example
+                jf pip install -r requirements.txt --build-name=${{ env.env.JFROG_CLI_BUILD_NAME }}  --module=jfrog-python-example
                 python setup.py sdist bdist_wheel
                 cd dist && echo "hashes=$(sha256sum * | base64 -w0)" >> $GITHUB_OUTPUT
 
             - name: publish python package
               run: |
-                jf rt u dist/ python-virtual/example-projects/ --build-name=${{ env.BUILD_NAME }}  --build-number=${{ env.BUILD_NUMBER }}  --module=jfrog-python-example --project ${{ vars.JF_PROJECT_KEY }} 
+                jf rt u dist/ python-virtual/example-projects/ --module=jfrog-python-example 
 
             - name: Set up Docker Buildx
               uses: docker/setup-buildx-action@v3    
@@ -82,13 +81,13 @@ jobs:
             - name: add docker package to build
               run: |  
                  echo "${{ vars.JF_URL }}/${{ env.DOCKER_REPO }}/${{ env.IMAGE_NAME }}@${{ steps.build.outputs.digest }}" > metadata.json
-                 jf rt build-docker-create ${{ env.DOCKER_REPO }} --image-file metadata.json --build-name ${{ env.BUILD_NAME }}  --build-number ${{ env.BUILD_NUMBER }} --project ${{ vars.JF_PROJECT_KEY }}
+                 jf rt build-docker-create ${{ env.DOCKER_REPO }} --image-file metadata.json 
                  
             - name: publish build info
               run: |
-                jf rt bce ${{ env.BUILD_NAME }}  ${{ env.BUILD_NUMBER }} 
-                jf rt bp ${{ env.BUILD_NAME }}  ${{ env.BUILD_NUMBER }}  --project ${{ vars.JF_PROJECT_KEY }}
-                jf build-scan  --format sarif --fail=false --project ${{ vars.JF_PROJECT_KEY }}  ${{ env.BUILD_NAME }}  ${{ env.BUILD_NUMBER }} 
+                jf rt bce 
+                jf rt bp 
+                jf build-scan  --format sarif --fail=false 
             
     provenance:
       needs: [build-publish-python]
