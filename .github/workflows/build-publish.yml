@@ -62,9 +62,9 @@ jobs:
                 username: ${{ vars.JF_DOCKER_USER }} 
                 password: ${{ secrets.JF_DOCKER_TOKEN }} 
             
-            - name: docker login
-              run: |  
-                 jf docker login ${{ secrets.JF_URL }}/${{ env.DOCKER_REPO }}
+            #- name: docker login
+            #  run: |  
+            #     jf docker login ${{ secrets.JF_URL }}/${{ env.DOCKER_REPO }}
                 
             - name: Build Docker image    
               uses: docker/build-push-action@v5
