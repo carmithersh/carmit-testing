@@ -44,7 +44,7 @@ jobs:
                 
             - name: build project
               run: |                               
-                jf pip install -r requirements.txt --build-name=${{ env.env.JFROG_CLI_BUILD_NAME }}  --module=jfrog-python-example
+                jf pip install -r requirements.txt --module=jfrog-python-example
                 python setup.py sdist bdist_wheel
                 cd dist && echo "hashes=$(sha256sum * | base64 -w0)" >> $GITHUB_OUTPUT
 
