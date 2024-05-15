@@ -1,7 +1,5 @@
 name: oidc-poc-cli
-on:
-    push:
-        branches:
+on: [push]
 
 permissions:
   actions: read # for detecting the Github Actions environment.
@@ -9,16 +7,16 @@ permissions:
   packages: write # for uploading attestations.
   contents: read
 jobs:
-    build-publish-python:
-        
+    build-publish:        
         runs-on: ubuntu-latest
         env:
           DOCKER_REPO: 'docler-local3'
           IMAGE_NAME: 'carmit-testing:6'
           JFROG_CLI_BUILD_PROJECT: carmit-prj-1
           PLATFORM_URL: https://${{ secrets.JF_URL }}/
+          JF_URL: ${{ secrets.JF_URL }}
         outputs:
-          image: "${{ secrets.JF_URL }}/${{ env.DOCKER_REPO }}/${{ env.IMAGE_NAME }}"
+          image: ${{ env.JF_URL }}/${{ env.DOCKER_REPO }}/${{ env.IMAGE_NAME }}
           digest: ${{ steps.build.outputs.digest }}
         steps:
             - name: Checkout the repository    
@@ -91,11 +89,11 @@ jobs:
                 jf build-scan  --format sarif --fail=false 
             
     provenance:
-      needs: [build-publish-python]
+      needs: [build-publish]
       uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v1.10.0
       with:
-        image:  ${{ needs.build-publish-python.outputs.image }}
-        digest: ${{ needs.build-publish-python.outputs.digest }}
+        image:  ${{ needs.build-publish.outputs.image }}
+        digest: ${{ needs.build-publish.outputs.digest }}
         private-repository: true
       secrets:
         registry-username: ${{ vars.JF_DOCKER_USER }} 
