@@ -12,7 +12,7 @@ jobs:
     build-publish-python:
         runs-on: ubuntu-latest
         env:
-          DOCKER_REPO: 'docler-local3'
+          DOCKER_REPO: 'testing-docker-local'
           IMAGE_NAME: 'carmit-testing:6'
           JFROG_CLI_BUILD_PROJECT: carmit-prj-1         
         outputs:
