@@ -19,8 +19,6 @@ jobs:
           image: ${{ vars.JF_URL }}/${{ env.DOCKER_REPO }}/${{ env.IMAGE_NAME }}
           digest: ${{ steps.build.outputs.digest }}
         steps:
-            - name: Checkout the repository    
-              uses: actions/checkout@v4
             # Setup Go
             - name: Setup Go
               uses: actions/setup-go@v5
@@ -38,14 +36,16 @@ jobs:
             - name: Build current CLI
               run: go build .
 
-      # Use the specific setup-cli branch
+            # Use the specific setup-cli branch
             - uses: eyaldelarea/setup-jfrog-cli@cleanUpSummaries    
               name: Setup JFrog CLI
               env: 
                 JF_URL: https://${{ vars.JF_URL }}/
               with:
                   oidc-provider-name: github-carmit-project-1
-
+            - name: Checkout the repository    
+              uses: actions/checkout@v4
+              
             - name: configure jfrog environment
               run: |
                 ./jfrog-cli pip-config --repo-resolve=python-virtual    
