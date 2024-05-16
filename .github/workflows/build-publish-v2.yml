@@ -43,9 +43,19 @@ jobs:
                 JF_URL: https://${{ vars.JF_URL }}/
               with:
                   oidc-provider-name: github-carmit-project-1
+                  
+            - name: check filesystem 1
+              run: |      
+                pwd
+                ls -ltr 
+                
             - name: Checkout the repository    
               uses: actions/checkout@v4
               
+            - name: check filesystem 2
+              run: |      
+                pwd
+                ls -ltr   
             - name: configure jfrog environment
               run: |
                 ./jfrog-cli pip-config --repo-resolve=python-virtual    
@@ -58,9 +68,7 @@ jobs:
                 echo $VIRTUAL_ENV
                 
             - name: build project
-              run: |      
-                pwd
-                ls -ltr 
+              run: |                      
                 ./jfrog-cli pip install -r requirements.txt  --module=jfrog-python-example
                 python setup.py sdist bdist_wheel
                 cd dist && echo "hashes=$(sha256sum * | base64 -w0)" >> $GITHUB_OUTPUT
