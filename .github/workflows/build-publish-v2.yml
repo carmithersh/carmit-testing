@@ -110,7 +110,10 @@ jobs:
               run: |
                 /tmp/jfrog-cli rt bce 
                 /tmp/jfrog-cli rt bp
-                /tmp/jfrog-cli build-scan  --format sarif --fail=false
+                
+            - name: build scan
+              run: |            
+                /tmp/jfrog-cli build-scan --fail=false
             
     provenance:
       needs: [build-publish-python]
