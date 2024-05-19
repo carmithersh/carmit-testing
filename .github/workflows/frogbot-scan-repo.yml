@@ -17,7 +17,7 @@ jobs:
         # The repository scanning will be triggered periodically on the following branches.
         branch: ["main"]
     steps:
-      - uses: carmithersh/frogbot@master
+      - uses: jfrog/frogbot@v2
         with:
           oidc-provider-name: github-carmit-project-1
         env:
