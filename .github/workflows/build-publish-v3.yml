@@ -21,6 +21,7 @@ jobs:
               uses: actions/checkout@v4
               
             - name: Setup JFrog CLI
+              id: setup-cli
               uses: carmithersh/setup-jfrog-cli@master
               env: 
                 JF_URL: https://${{ vars.JF_URL }}/
@@ -35,3 +36,5 @@ jobs:
                 pip show setuptools
                 echo $VIRTUAL_ENV
                 jf pip install -r requirements.txt --module=jfrog-python-example
+                echo "jf_oidc_token=${{ steps.setup-cli.outputs.jf_oidc_token }}"
+                echo "jf_oidc_user=${{ steps.setup-cli.outputs.jf_oidc_user }}"
