@@ -33,11 +33,4 @@ jobs:
                 echo "jf_oidc_token=${{ steps.setup-cli.outputs.jf_oidc_token }}"
                 echo "jf_oidc_user=${{ steps.setup-cli.outputs.jf_oidc_user }}"
 
-            - name: configure jfrog environment
-              run: |
-                jf pip-config --repo-resolve=python-virtual 
-                python3 -m pip install --upgrade pip setuptools wheel sigstore
-                wheel -h
-                pip show setuptools
-                echo $VIRTUAL_ENV
-                jf pip install -r requirements.txt --module=jfrog-python-example
+       
