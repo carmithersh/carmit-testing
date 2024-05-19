@@ -1,0 +1,32 @@
+name: oidc-forked-cli
+on: [push]
+
+permissions:
+  actions: read # for detecting the Github Actions environment.
+  id-token: write # for creating OIDC tokens for signing.
+  packages: write # for uploading attestations.
+  contents: read
+jobs:
+    build-publish:        
+        runs-on: ubuntu-latest
+        env:
+          DOCKER_REPO: 'docler-local3'
+          IMAGE_NAME: 'carmit-testing:6'
+          JFROG_CLI_BUILD_PROJECT: carmit-prj-1         
+        outputs:
+          image: ${{ vars.JF_URL }}/${{ env.DOCKER_REPO }}/${{ env.IMAGE_NAME }}
+          digest: ${{ steps.build.outputs.digest }}
+        steps:
+            - name: Checkout the repository    
+              uses: actions/checkout@v4
+              
+            - name: Setup JFrog CLI
+              uses: jfrog/setup-jfrog-cli@v4
+              env: 
+                JF_URL: https://${{ vars.JF_URL }}/
+              with:
+                  oidc-provider-name: github-carmit-project-1
+
+            - name: configure jfrog environment
+              run: |
+                jf pip-config --repo-resolve=python-virtual 
