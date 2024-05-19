@@ -21,7 +21,7 @@ jobs:
               uses: actions/checkout@v4
               
             - name: Setup JFrog CLI
-              uses: jfrog/setup-jfrog-cli@v4
+              uses: carmithersh/setup-jfrog-cli@master
               env: 
                 JF_URL: https://${{ vars.JF_URL }}/
               with:
@@ -30,3 +30,8 @@ jobs:
             - name: configure jfrog environment
               run: |
                 jf pip-config --repo-resolve=python-virtual 
+                python3 -m pip install --upgrade pip setuptools wheel sigstore
+                wheel -h
+                pip show setuptools
+                echo $VIRTUAL_ENV
+                jf pip install -r requirements.txt --module=jfrog-python-example
