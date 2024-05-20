@@ -16,8 +16,6 @@ jobs:
         outputs:
           image: ${{ vars.JF_URL }}/${{ env.DOCKER_REPO }}/${{ env.IMAGE_NAME }}
           digest: ${{ steps.build.outputs.digest }}
-          jf_oidc_user: ${{ steps.setup-cli.outputs.jf_oidc_user }}
-          jf_oidc_token: ${{ steps.setup-cli.outputs.jf_oidc_token }}
         steps:
             - name: Checkout the repository    
               uses: actions/checkout@v4
@@ -93,14 +91,17 @@ jobs:
                 jf rt bce 
                 jf rt bp 
                 jf build-scan  --format sarif --fail=false 
-            
-    provenance:
-      needs: [build-publish]
-      uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v1.10.0
-      with:
-        image:  ${{ needs.build-publish.outputs.image }}
-        digest: ${{ needs.build-publish.outputs.digest }}
-        private-repository: true
-      secrets:
-        registry-username: ${{ needs.build-publish.outputs.jf_oidc_user }}
-        registry-password: ${{ needs.build-publish.outputs.jf_oidc_token }}
+
+            - name: provenance
+              uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v1.10.0
+              secrets:
+                registry-username: ${{ steps.setup-cli.outputs.jf_oidc_user }}
+                registry-password: ${{ steps.setup-clih.outputs.jf_oidc_token }}
+              with:
+                image:  ${{ vars.JF_URL }}/${{ env.DOCKER_REPO }}/${{ env.IMAGE_NAME }}
+                digest: ${{ steps.build.outputs.digest }}
+                private-repository: true
+              
+
+           
+      
