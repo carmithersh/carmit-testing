@@ -19,8 +19,6 @@ jobs:
         outputs:
           image: ${{ vars.JF_URL }}/${{ env.DOCKER_REPO }}/${{ env.IMAGE_NAME }}
           digest: ${{ steps.build.outputs.digest }}
-          user: ${{ steps.setup-cli.outputs.oidc-user }} 
-          token: ${{ steps.setup-cli.outputs.oidc-token }} 
         steps:
             # Setup Go
             - name: Setup Go
