@@ -89,20 +89,17 @@ jobs:
                 jf rt bce 
                 jf rt bp 
                 jf build-scan  --format sarif --fail=false 
-
     provenance:
       needs: [build-publish]
-      runs-on: ubuntu-latest
-      steps:
-      - uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v1.10.0
-        with:
-          image:  ${{ needs.build-publish.outputs.image }}
-          digest: ${{ needs.build-publish.outputs.digest }}
-          private-repository: true
-        env:
-          registry-username: ${{ needs.build-publish.outputs.user }} 
-          registry-password: ${{ needs.build-publish.outputs.pass }} 
-              
+      uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v1.10.0
+      with:
+        image:  ${{ needs.build-publish.outputs.image }}
+        digest: ${{ needs.build-publish.outputs.digest }}
+        private-repository: true
+      secrets:       
+        registry-username: ${{ needs.build-publish.outputs.user }} 
+        registry-password: ${{ needs.build-publish.outputs.pass }} 
+            
 
            
       
