@@ -95,7 +95,7 @@ jobs:
               id: build
               with:
                 push: true
-                platforms: linux/amd64, linux/arm64
+                platforms: linux/amd64 #, linux/arm64
                 tags: ${{ vars.JF_URL }}/${{ env.DOCKER_REPO }}/${{ env.IMAGE_NAME }}          
                         
             - name: docker scan
