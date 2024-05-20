@@ -10,8 +10,8 @@ jobs:
     build-publish:        
         runs-on: ubuntu-latest
         env:
-          DOCKER_REPO: 'docler-local3'
-          IMAGE_NAME: 'carmit-testing:6'
+          DOCKER_REPO: 'docker-local'
+          IMAGE_NAME: 'github-jfrog-testing:1'
           JFROG_CLI_BUILD_PROJECT: carmit-prj-1         
         outputs:
           image: ${{ vars.JF_URL }}/${{ env.DOCKER_REPO }}/${{ env.IMAGE_NAME }}
@@ -27,12 +27,7 @@ jobs:
                 JF_URL: https://${{ vars.JF_URL }}/
               with:
                   oidc-provider-name: github-carmit-project-1
-
-            #- name: check outputs
-            #  run: |
-            #    echo "jf-oidc-token=${{ steps.setup-cli.outputs.jf-oidc-token }}"
-            #    echo "jf-oidc-user=${{ steps.setup-cli.outputs.jf-oidc-token }}"
-
+       
             - name: configure jfrog environment
               run: |
                 jf pip-config --repo-resolve=python-virtual    
@@ -61,8 +56,8 @@ jobs:
               uses: docker/login-action@v3
               with:
                 registry: ${{ vars.JF_URL }}
-                username: ${{ steps.setup-cli.outputs.jf-oidc-user }} 
-                password: ${{ steps.setup-cli.outputs.jf-oidc-token }}
+                username: ${{ steps.setup-cli.outputs.oidc-user }} 
+                password: ${{ steps.setup-cli.outputs.oidc-token }}
                 
             - name: Build Docker image    
               uses: docker/build-push-action@v5
