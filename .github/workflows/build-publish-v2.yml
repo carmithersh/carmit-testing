@@ -14,7 +14,7 @@ jobs:
         env:
           DOCKER_REPO: 'testing-docker-local'
           IMAGE_NAME: 'carmit-testing:6'
-          JFROG_CLI_BUILD_PROJECT: carmit-prj-1         
+          JF_PROJECT: carmit-prj-1         
         outputs:
           image: ${{ vars.JF_URL }}/${{ env.DOCKER_REPO }}/${{ env.IMAGE_NAME }}
           digest: ${{ steps.build.outputs.digest }}
