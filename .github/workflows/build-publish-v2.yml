@@ -40,6 +40,7 @@ jobs:
             # Use the specific setup-cli branch
             - uses: eyaldelarea/setup-jfrog-cli@cleanUpSummaries    
               name: Setup JFrog CLI
+              id: setup-cli
               env: 
                 JF_URL: https://${{ vars.JF_URL }}/
               with:
