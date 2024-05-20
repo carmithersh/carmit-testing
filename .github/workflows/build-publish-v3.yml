@@ -16,6 +16,8 @@ jobs:
         outputs:
           image: ${{ vars.JF_URL }}/${{ env.DOCKER_REPO }}/${{ env.IMAGE_NAME }}
           digest: ${{ steps.build.outputs.digest }}
+          user: ${{ steps.setup-cli.outputs.jf_oidc_user }}
+          pass: ${{ steps.setup-cli.outputs.jf_oidc_usert }}
         steps:
             - name: Checkout the repository    
               uses: actions/checkout@v4
@@ -31,7 +33,7 @@ jobs:
             - name: check outputs
               run: |
                 echo "jf_oidc_token=${{ steps.setup-cli.outputs.jf_oidc_token }}"
-                echo "jf_oidc_user=${{ steps.setup-cli.outputs.jf_oidc_user }}"
+                echo "jf_oidc_user=${{ steps.setup-cli.outputs.jf_oidc_token }}"
 
             - name: configure jfrog environment
               run: |
@@ -63,10 +65,6 @@ jobs:
                 registry: ${{ vars.JF_URL }}
                 username: ${{ steps.setup-cli.outputs.jf_oidc_user }} 
                 password: ${{ steps.setup-cli.outputs.jf_oidc_token }}
-            
-            #- name: docker login
-            #  run: |  
-            #     jf docker login ${{ vars.JF_URL }}/${{ env.DOCKER_REPO }}
                 
             - name: Build Docker image    
               uses: docker/build-push-action@v5
@@ -92,15 +90,18 @@ jobs:
                 jf rt bp 
                 jf build-scan  --format sarif --fail=false 
 
-            - name: provenance
-              uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v1.10.0
-              secrets:
-                registry-username: ${{ steps.setup-cli.outputs.jf_oidc_user }}
-                registry-password: ${{ steps.setup-clih.outputs.jf_oidc_token }}
-              with:
-                image:  ${{ vars.JF_URL }}/${{ env.DOCKER_REPO }}/${{ env.IMAGE_NAME }}
-                digest: ${{ steps.build.outputs.digest }}
-                private-repository: true
+    provenance:
+      needs: [build-publish]
+      runs-on: ubuntu-latest
+      steps:
+      - uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v1.10.0
+        with:
+          image:  ${{ needs.build-publish.outputs.image }}
+          digest: ${{ needs.build-publish.outputs.digest }}
+          private-repository: true
+        env:
+          registry-username: ${{ needs.build-publish.outputs.user }} 
+          registry-password: ${{ needs.build-publish.outputs.pass }} 
               
 
            
