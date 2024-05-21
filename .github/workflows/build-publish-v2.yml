@@ -46,7 +46,9 @@ jobs:
               with:
                   oidc-provider-name: github-carmit-project-1
                   
-       
+            - name: check filesystem 1
+              run: |      
+                mv  ./jfrog-cli /tmp/
                 
             - name: Checkout the repository    
               uses: actions/checkout@v4
