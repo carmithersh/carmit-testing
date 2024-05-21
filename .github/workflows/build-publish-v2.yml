@@ -93,7 +93,7 @@ jobs:
                 push: true
                 platforms: linux/amd64 #, linux/arm64
                 tags: ${{ vars.JF_URL }}/${{ env.DOCKER_REPO }}/${{ env.IMAGE_NAME }}     
-                attests: --sbom=false --provenance=false
+                
                         
             - name: docker scan
               run: |  
