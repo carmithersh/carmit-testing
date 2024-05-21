@@ -10,9 +10,10 @@ jobs:
     build-publish:        
         runs-on: ubuntu-latest
         env:
-          DOCKER_REPO: 'docler-local3'
+          DOCKER_REPO: 'testing-docker-local'
           IMAGE_NAME: 'carmit-testing:6'
-          JFROG_CLI_BUILD_PROJECT: carmit-prj-1         
+          JF_PROJECT: carmit-prj-1     
+          JF_URL: https://${{ vars.JF_URL }}/         
         outputs:
           image: ${{ vars.JF_URL }}/${{ env.DOCKER_REPO }}/${{ env.IMAGE_NAME }}
           digest: ${{ steps.build.outputs.digest }}
@@ -24,6 +25,7 @@ jobs:
               uses: jfrog/setup-jfrog-cli@v4
               env: 
                 JF_URL: https://${{ vars.JF_URL }}/
+                JF_PROJECT: carmit-prj-1  
               with:
                   oidc-provider-name: github-carmit-project-1
 
@@ -57,11 +59,7 @@ jobs:
                 registry: ${{ vars.JF_URL }}
                 username: ${{ vars.JF_DOCKER_USER }} 
                 password: ${{ secrets.JF_DOCKER_TOKEN }} 
-            
-            #- name: docker login
-            #  run: |  
-            #     jf docker login ${{ vars.JF_URL }}/${{ env.DOCKER_REPO }}
-                
+             
             - name: Build Docker image    
               uses: docker/build-push-action@v5
               id: build
