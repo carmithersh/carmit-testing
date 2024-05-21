@@ -46,18 +46,12 @@ jobs:
               with:
                   oidc-provider-name: github-carmit-project-1
                   
-            - name: check filesystem 1
-              run: |      
-                mv  ./jfrog-cli /tmp/
+       
                 
             - name: Checkout the repository    
               uses: actions/checkout@v4
               
-            - name: check filesystem 2
-              run: |      
-                pwd
-                ls -ltr   
-                ls -ltr /tmp/
+           
             - name: configure jfrog environment
               run: |
                 /tmp/jfrog-cli pip-config --repo-resolve=python-virtual    
@@ -96,7 +90,8 @@ jobs:
               with:
                 push: true
                 platforms: linux/amd64 #, linux/arm64
-                tags: ${{ vars.JF_URL }}/${{ env.DOCKER_REPO }}/${{ env.IMAGE_NAME }}          
+                tags: ${{ vars.JF_URL }}/${{ env.DOCKER_REPO }}/${{ env.IMAGE_NAME }}     
+                attests: --sbom=false --provenance=false
                         
             - name: docker scan
               run: |  
