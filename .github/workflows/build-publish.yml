@@ -1,4 +1,4 @@
-name: oidc-poc-cli
+name: Build-publish-scan
 on: [push]
 
 permissions:
