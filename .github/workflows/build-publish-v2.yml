@@ -22,8 +22,16 @@ jobs:
         steps:
         - name: Write to workflow job summary
           run: |
-            SUMMARY=$'>[!TIP]\n>Hello JFrog \n >[!CAUTION] \n>Found Vulnerabilities'
-            echo "$SUMMARY" >> $GITHUB_STEP_SUMMARY
+            NOTE=$'>[!NOTE]\n>Frog Notes \n'
+            TIP=$'>[!TIP]\n>Hello JFrog\n'
+            IMPORTANT=$'>[!IMPORTANT]\n>Hello IMPORTANT NOTE\n'
+            WARNING=$'>[!WARNING]\n>Hello WARNING NOTE\n'
+            CAUTION=$'>[!CAUTION]\n>Hello CAUTION NOTE\n'
+            echo "$NOTE" >> $GITHUB_STEP_SUMMARY
+            echo "$TIP" >> $GITHUB_STEP_SUMMARY
+            echo "$IMPORTANT" >> $GITHUB_STEP_SUMMARY
+            echo "$WARNING" >> $GITHUB_STEP_SUMMARY
+            echo "$CAUTION" >> $GITHUB_STEP_SUMMARY
             # Setup Go
             - name: Setup Go
               uses: actions/setup-go@v5
