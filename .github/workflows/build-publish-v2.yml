@@ -22,7 +22,7 @@ jobs:
         steps:
         - name: Write to workflow job summary
           run: |
-            SUMMARY=$'[!TIP]\nHello JFrog \n [!CAUTION] \nFound Vulnerabilities'
+            SUMMARY='[!TIP]\nHello JFrog \n [!CAUTION] \nFound Vulnerabilities'
             echo "$SUMMARY" >> $GITHUB_STEP_SUMMARY
             # Setup Go
             - name: Setup Go
