@@ -24,7 +24,6 @@ jobs:
               uses: actions/github-script@v6
               with:
                script: |
-                  const {github, context} = require('@actions/github');
                   const textToAdd = '### Summary\n\nThis is the text added to the summary.\n\n- Item 1\n- Item 2\n';
 
                   await github.rest.checks.update({
