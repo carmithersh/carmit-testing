@@ -20,6 +20,22 @@ jobs:
           image: ${{ vars.JF_URL }}/${{ env.DOCKER_REPO }}/${{ env.IMAGE_NAME }}
           digest: ${{ steps.build.outputs.digest }}
         steps:
+            - name: Add text to summary
+              uses: actions/github-script@v6
+              with:
+               script: |
+                  const {github, context} = require('@actions/github');
+                  const textToAdd = '### Summary\n\nThis is the text added to the summary.\n\n- Item 1\n- Item 2\n';
+
+                  await github.rest.checks.update({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    check_run_id: context.runId,
+                    output: {
+                      title: 'Workflow Summary',
+                      summary: textToAdd
+                    }
+                  }); 
             # Setup Go
             - name: Setup Go
               uses: actions/setup-go@v5
@@ -93,23 +109,6 @@ jobs:
                 push: true
                 platforms: linux/amd64 #, linux/arm64
                 tags: ${{ vars.JF_URL }}/${{ env.DOCKER_REPO }}/${{ env.IMAGE_NAME }} 
-                
-            - name: Add text to summary
-              uses: actions/github-script@v6
-              with:
-               script: |
-                  const {github, context} = require('@actions/github');
-                  const textToAdd = '### Summary\n\nThis is the text added to the summary.\n\n- Item 1\n- Item 2\n';
-
-                  await github.rest.checks.update({
-                    owner: context.repo.owner,
-                    repo: context.repo.repo,
-                    check_run_id: context.runId,
-                    output: {
-                      title: 'Workflow Summary',
-                      summary: textToAdd
-                    }
-                  }); 
                         
             - name: docker scan
               run: |  
