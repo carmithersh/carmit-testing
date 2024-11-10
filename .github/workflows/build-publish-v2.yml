@@ -1,8 +1,8 @@
-name: Build-publish-scan
+name: build-publish-scan
 on:
     push:
         branches:
-
+         main
 permissions:
   actions: read # for detecting the Github Actions environment.
   id-token: write # for creating OIDC tokens for signing.
@@ -10,128 +10,128 @@ permissions:
   contents: read
 jobs:
     build-publish-python:
-        runs-on: ubuntu-latest
+        runs-on: ubuntu-latest              
         env:
-          DOCKER_REPO: 'testing-docker-local'
-          IMAGE_NAME: 'carmit-testing:6'
-          JF_PROJECT: carmit-prj-1     
+          DOCKER_REPO: 'carmit-prj-1-testing-docker-local'
+          IMAGE_NAME: 'my-very-cool-image:${{ github.run_number }}'
           JF_URL: https://${{ vars.JF_URL }}/
-        outputs:
-          image: ${{ vars.JF_URL }}/${{ env.DOCKER_REPO }}/${{ env.IMAGE_NAME }}
-          digest: ${{ steps.build.outputs.digest }}
+          DOCKER_CLI_EXPERIMENTAL: enabled
         steps:
-        - name: Write to workflow job summary
-          run: |
-            NOTE=$'>[!NOTE]\n>Frog Notes \n'
-            TIP=$'>[!TIP]\n>Hello JFrog\n'
-            IMPORTANT=$'>[!IMPORTANT]\n>Hello IMPORTANT NOTE\n'
-            WARNING=$'>[!WARNING]\n>Hello WARNING NOTE\n'
-            CAUTION=$'>[!CAUTION]\n>Hello CAUTION NOTE\n'
-            echo "$NOTE" >> $GITHUB_STEP_SUMMARY
-            echo "$TIP" >> $GITHUB_STEP_SUMMARY
-            echo "$IMPORTANT" >> $GITHUB_STEP_SUMMARY
-            echo "$WARNING" >> $GITHUB_STEP_SUMMARY
-            echo "$CAUTION" >> $GITHUB_STEP_SUMMARY
-            # Setup Go
-            - name: Setup Go
-              uses: actions/setup-go@v5
-              with:
-                go-version: 1.22.x
-                cache: false
-
-            # Build the specific CLI branch
-            - name: Checkout code
-              uses: actions/checkout@v4
-              with:
-                repository: "eyaldelarea/jfrog-cli"
-                ref: "job_summaries"
-                
-            - name: Build current CLI
-              run: go build .
-
             # Use the specific setup-cli branch
-            - uses: eyaldelarea/setup-jfrog-cli@cleanUpSummaries    
-              name: Setup JFrog CLI
+            - name: Setup JFrog CLI
+              uses: jfrog/setup-jfrog-cli@v4
               id: setup-cli
-              env: 
+              env:
                 JF_URL: https://${{ vars.JF_URL }}/
+                JF_PROJECT: carmit-prj-1
               with:
-                  oidc-provider-name: github-carmit-project-1
-                  
-            - name: check filesystem 1
-              run: |      
-                mv  ./jfrog-cli /tmp/
-                
-            - name: Checkout the repository    
+                  oidc-provider-name: jfrog-github-oidc
+
+            - name: Checkout the repository
               uses: actions/checkout@v4
-              
-           
+
+
             - name: configure jfrog environment
               run: |
-                /tmp/jfrog-cli pip-config --repo-resolve=python-virtual    
-                
+                # Use a curated repository for python dependencies resolution
+                jf pip-config --repo-resolve=codeninjas-proj-python-virtual   
+
             - name: configure environment
-              run: |                      
+              run: |    
+                pip install --upgrade pip     
                 python3 -m pip install --upgrade pip setuptools wheel sigstore
                 wheel -h
                 pip show setuptools
                 echo $VIRTUAL_ENV
-                
+
             - name: build project
-              run: |                      
-                /tmp/jfrog-cli pip install -r requirements.txt  --module=jfrog-python-example
+              run: |                                   
+                jf pip install -r requirements.txt  --module=jfrog-python-example                
                 python setup.py sdist bdist_wheel
                 cd dist && echo "hashes=$(sha256sum * | base64 -w0)" >> $GITHUB_OUTPUT
 
             - name: publish python package
               run: |
-                /tmp/jfrog-cli rt u dist/ python-virtual/example-projects/ --module=jfrog-python-example
+                jf rt u dist/ codeninjas-proj-python-virtual/example-projects/ --module=jfrog-python-example
 
-            - name: Set up Docker Buildx
-              uses: docker/setup-buildx-action@v3    
-                
+      
+            - name: Set up QEMU
+              uses: docker/setup-qemu-action@v3                 
+
             - name: Authenticate Docker
               uses: docker/login-action@v3
               with:
                 registry: ${{ vars.JF_URL }}
-                username: ${{ steps.setup-cli.outputs.oidc-user }} 
+                username: ${{ steps.setup-cli.outputs.oidc-user }}
                 password: ${{ steps.setup-cli.outputs.oidc-token }}
-    
-                
-            - name: Build Docker image    
-              uses: docker/build-push-action@v5
-              id: build
+
+            - name: Setup buildx instance
+              uses: docker/setup-buildx-action@v3
               with:
-                push: true
-                platforms: linux/amd64 #, linux/arm64
-                tags: ${{ vars.JF_URL }}/${{ env.DOCKER_REPO }}/${{ env.IMAGE_NAME }} 
-                        
+                use: true
+                platforms: linux/amd64,linux/arm64
+                install: true
+
+            - name: docker build through 
+              run: |  
+                docker buildx ls
+                jf docker --version
+                jf docker build --tag ${{ vars.JF_URL }}/${{ env.DOCKER_REPO }}/${{ env.IMAGE_NAME }} --platform linux/amd64,linux/arm64 --metadata-file  metadata.json --push .
+                
             - name: docker scan
               run: |  
-                 /tmp/jfrog-cli docker pull ${{ vars.JF_URL }}/${{ env.DOCKER_REPO }}/${{ env.IMAGE_NAME }}
-                 /tmp/jfrog-cli docker scan ${{ vars.JF_URL }}/${{ env.DOCKER_REPO }}/${{ env.IMAGE_NAME }}                               
+                 jf docker pull ${{ vars.JF_URL }}/${{ env.DOCKER_REPO }}/${{ env.IMAGE_NAME }}
+                 jf docker scan ${{ vars.JF_URL }}/${{ env.DOCKER_REPO }}/${{ env.IMAGE_NAME }}   
+            #- name: docker build
+            #  run: |  
+            #    jf docker build --tag ${{ vars.JF_URL }}/${{ env.DOCKER_REPO }}/${{ env.IMAGE_NAME }}-amd64 --platform  linux/amd64 --load .
+            #    #docker images
+            #    jf docker scan ${{ vars.JF_URL }}/${{ env.DOCKER_REPO }}/${{ env.IMAGE_NAME }}-amd64                
+            #    jf docker push ${{ vars.JF_URL }}/${{ env.DOCKER_REPO }}/${{ env.IMAGE_NAME }}-amd64
+                
+            #    jf docker build --tag ${{ vars.JF_URL }}/${{ env.DOCKER_REPO }}/${{ env.IMAGE_NAME }}-arm64 --platform  linux/arm64 --load .
+            #    #docker images
+            #    jf docker scan ${{ vars.JF_URL }}/${{ env.DOCKER_REPO }}/${{ env.IMAGE_NAME }}-arm64                
+            #    jf docker push ${{ vars.JF_URL }}/${{ env.DOCKER_REPO }}/${{ env.IMAGE_NAME }}-arm64
+                
+            #    #echo "docker images scanned, now lets push a fat manifest and the images"
+            #    #docker manifest create  ${{ vars.JF_URL }}/${{ env.DOCKER_REPO }}/${{ env.IMAGE_NAME }} ${{ vars.JF_URL }}/${{ env.DOCKER_REPO }}/${{ env.IMAGE_NAME }}-amd64 ${{ vars.JF_URL }}/${{ env.DOCKER_REPO }}/${{ env.IMAGE_NAME }}-arm64                
+            #    #echo "docker manifest created"
+            #    #docker manifest push ${{ vars.JF_URL }}/${{ env.DOCKER_REPO }}/${{ env.IMAGE_NAME }}
+            #    #echo "docker manifest pushed"
+            #    #docker image save -o myimage.tar localhost:5000/myimage:latest
+                
 
             - name: add docker package to build
               run: |  
-                 echo "${{ vars.JF_URL }}/${{ env.DOCKER_REPO }}/${{ env.IMAGE_NAME }}@${{ steps.build.outputs.digest }}" > metadata.json
-                 /tmp/jfrog-cli rt build-docker-create ${{ env.DOCKER_REPO }} --image-file metadata.json 
-                 
+                 echo "----------------"
+                 cat metadata.json
+                 echo "----------------"
+                 digest=$(cat metadata.json | jq '.["containerimage.digest"]')
+                 echo "digest=$digest"
+                 echo "${{ vars.JF_URL }}/${{ env.DOCKER_REPO }}/${{ env.IMAGE_NAME }}@$digest" > metadata.json
+                 jf rt build-docker-create ${{ env.DOCKER_REPO }} --image-file metadata.json 
+
             - name: publish build info
               run: |
-                /tmp/jfrog-cli rt bce 
-                /tmp/jfrog-cli rt bp
-                
+                jf rt build-collect-env 
+                jf rt build-add-dependencies .
+                jf rt build-add-git
+                jf rt build-publish
+
             - name: build scan
               run: |            
-                /tmp/jfrog-cli build-scan --fail=false
-            
-    provenance:
-      needs: [build-publish-python]
-      uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v1.10.0
-      with:
-        image:  ${{ needs.build-publish-python.outputs.image }}
-        digest: ${{ needs.build-publish-python.outputs.digest }}
-        private-repository: true
-      secrets:
-        registry-username: ${{ vars.JF_DOCKER_USER }} 
-        registry-password: ${{ secrets.JF_DOCKER_TOKEN }} 
+                jf build-scan
+                
+            - name: Write to workflow job summary
+              run: |
+                    NOTE=$'>[!NOTE]\n>Frog Notes \n'
+                    TIP=$'>[!TIP]\n>Hello JFrog\n'
+                    IMPORTANT=$'>[!IMPORTANT]\n>Hello IMPORTANT NOTE\n'
+                    WARNING=$'>[!WARNING]\n>Hello WARNING NOTE\n'
+                    CAUTION=$'>[!CAUTION]\n>Hello CAUTION NOTE\n'
+                    echo "$NOTE" >> $GITHUB_STEP_SUMMARY
+                    echo "$TIP" >> $GITHUB_STEP_SUMMARY
+                    echo "$IMPORTANT" >> $GITHUB_STEP_SUMMARY
+                    echo "$WARNING" >> $GITHUB_STEP_SUMMARY
+                    echo "$CAUTION" >> $GITHUB_STEP_SUMMARY
