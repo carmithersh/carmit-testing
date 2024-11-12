@@ -8,6 +8,7 @@ permissions:
   id-token: write # for creating OIDC tokens for signing.
   packages: write # for uploading attestations.
   contents: read
+  attestations: write
 jobs:
     build-publish-python:
         runs-on: ubuntu-latest              
@@ -50,11 +51,27 @@ jobs:
                 python setup.py sdist bdist_wheel
                 cd dist && echo "hashes=$(sha256sum * | base64 -w0)" >> $GITHUB_OUTPUT
 
+            - name: check file system
+              run: |   
+                echo "ls ."
+                ls -ltr .
+                echo "ls dist"
+                ls -ltr dist
+                
+                
+            - name: Generate artifact attestation
+              uses: actions/attest-build-provenance@v1
+              with:
+                subject-path: 'dist/jfrog_python_example-1.0-py3-none-any.whlPATH/TO/ARTIFACT'
+                
             - name: publish python package
               run: |
                 jf rt u dist/ codeninjas-proj-python-virtual/example-projects/ --module=jfrog-python-example
 
-      
+            - name: check file system post binary attestation
+              run: |   
+                echo "ls ."
+                
             - name: Set up QEMU
               uses: docker/setup-qemu-action@v3                 
 
@@ -77,7 +94,24 @@ jobs:
                 docker buildx ls
                 jf docker --version
                 jf docker build --tag ${{ vars.JF_URL }}/${{ env.DOCKER_REPO }}/${{ env.IMAGE_NAME }} --platform linux/amd64,linux/arm64 --metadata-file  metadata.json --push .
-                
+
+            - name: add docker package to build
+              id: set_vars
+              run: |  
+                 echo "----------------"
+                 cat metadata.json
+                 echo "----------------"
+                 digest=$(cat metadata.json | jq '.["containerimage.digest"]')
+                 echo "digest=$digest"
+                 echo "docker_digest=$digest >> $GITHUB_OUTPUT
+
+            - name: Generate docker attestation
+              uses: actions/attest-build-provenance@v1
+              with:
+                subject-name: ${{ vars.JF_URL }}/${{ env.DOCKER_REPO }}/${{ env.IMAGE_NAME }}
+                subject-digest: '${{ steps.set_vars.outputs.docker_digest }}'
+                push-to-registry: true
+            
             - name: docker scan
               run: |  
                  jf docker pull ${{ vars.JF_URL }}/${{ env.DOCKER_REPO }}/${{ env.IMAGE_NAME }}
