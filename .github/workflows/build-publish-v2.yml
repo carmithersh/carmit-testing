@@ -95,7 +95,7 @@ jobs:
                 jf docker --version
                 jf docker build --tag ${{ vars.JF_URL }}/${{ env.DOCKER_REPO }}/${{ env.IMAGE_NAME }} --platform linux/amd64,linux/arm64 --metadata-file  metadata.json --push .
 
-            - name: add docker package to build
+            - name: get docker digest
               id: set_vars
               run: |  
                  echo "----------------"
@@ -103,7 +103,7 @@ jobs:
                  echo "----------------"
                  digest=$(cat metadata.json | jq '.["containerimage.digest"]')
                  echo "digest=$digest"
-                 echo "docker_digest=$digest >> $GITHUB_OUTPUT
+                 echo "docker_digest=$digest" >> $GITHUB_OUTPUT
 
             - name: Generate docker attestation
               uses: actions/attest-build-provenance@v1
