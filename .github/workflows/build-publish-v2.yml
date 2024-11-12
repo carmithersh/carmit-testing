@@ -103,7 +103,7 @@ jobs:
                  echo "----------------"
                  digest=$(cat metadata.json | jq '.["containerimage.digest"]')
                  echo "digest=$digest"
-                 echo "docker_digest=$digest" >> $GITHUB_OUTPUT
+                 echo "docker_digest=$digest" | tr -d '"' >> $GITHUB_OUTPUT
 
             - name: Generate docker attestation
               uses: actions/attest-build-provenance@v1
