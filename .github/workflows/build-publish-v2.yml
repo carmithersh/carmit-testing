@@ -62,7 +62,7 @@ jobs:
             - name: Generate artifact attestation
               uses: actions/attest-build-provenance@v1
               with:
-                subject-path: 'dist/jfrog_python_example-1.0-py3-none-any.whlPATH/TO/ARTIFACT'
+                subject-path: 'dist/jfrog_python_example-1.0.tar.gz'
                 
             - name: publish python package
               run: |
