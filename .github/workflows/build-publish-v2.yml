@@ -156,7 +156,7 @@ jobs:
 
             - name: create release bundle
               run: |
-                echo '{"files":[{"build": "$JFROG_CLI_BUILD_NAME/$JFROG_CLI_BUILD_NUMBER","includeDeps": "false","project":"$JFROG_CLI_BUILD_PROJECT"}]}' > build.json
+                echo '{"files":[{"build": "${{ env.JFROG_CLI_BUILD_NAME }}/${{ env.JFROG_CLI_BUILD_NUMBER }}","includeDeps": "false","project":"${{ env.JFROG_CLI_BUILD_PROJECT }}"}]}' > build.json
                 echo "**************"
                 cat build.json
                 echo "**************"
@@ -169,7 +169,7 @@ jobs:
                     --request PUT \
                     --header "Accept:application/json" \
                     --header "Content-Type:application/json" \
-                    --data "{\"project_key\":\"carmit-prj-1\",
+                    --data "{\"project_key\":\"${{ env.JFROG_CLI_BUILD_PROJECT }}\",
                     \"release_name\": \"my-rb\",
                     \"release_version\":\"1.0.1\",
                     \"target_environment\": \"DEV\"
