@@ -67,7 +67,7 @@ jobs:
                 
             - name: publish python package
               run: |
-                jf rt u dist/ codeninjas-proj-python-virtual/example-projects/ --module=jfrog-python-example
+                jf rt u dist/ codeninjas-proj-python-virtual/example-projects/ 
 
             - name: check file system post binary attestation
               run: |   
@@ -160,7 +160,7 @@ jobs:
                 echo "**************"
                 cat build.json
                 echo "**************"
-                jf release-bundle-create  --spec build.json my-rb 1.0.1
+                jf release-bundle-create --signing-key test --spec build.json my-rb 1.0.1
     
 
             - name: request_promotion
