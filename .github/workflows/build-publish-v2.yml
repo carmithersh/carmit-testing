@@ -156,7 +156,7 @@ jobs:
 
             - name: create release bundle
               run: |
-                echo "{"files":[{"build": "$JFROG_CLI_BUILD_NAME/$JFROG_CLI_BUILD_NUMBER","includeDeps": "false","project":"$JFROG_CLI_BUILD_PROJECT"}]} > build.json
+                echo '{"files":[{"build": "$JFROG_CLI_BUILD_NAME/$JFROG_CLI_BUILD_NUMBER","includeDeps": "false","project":"$JFROG_CLI_BUILD_PROJECT"}]}' > build.json
                 echo "**************"
                 cat build.json
                 echo "**************"
