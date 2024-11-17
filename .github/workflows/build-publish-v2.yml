@@ -17,6 +17,7 @@ jobs:
           IMAGE_NAME: 'my-very-cool-image:${{ github.run_number }}'
           JF_URL: https://${{ vars.JF_URL }}/
           DOCKER_CLI_EXPERIMENTAL: enabled
+          NOW_URL: ${{ vars.NOW_URL }}
         steps:
             # Use the specific setup-cli branch
             - name: Setup JFrog CLI
@@ -152,6 +153,28 @@ jobs:
                 jf rt build-add-dependencies .
                 jf rt build-add-git
                 jf rt build-publish
+
+            - name: create release bundle
+              run: |
+                echo "{"files":[{"build": "$JFROG_CLI_BUILD_NAME/$JFROG_CLI_BUILD_NUMBER","includeDeps": "false","project":"$JFROG_CLI_BUILD_PROJECT"}]} > build.json
+                echo "**************"
+                cat build.json
+                echo "**************"
+                jf release-bundle-create  --spec build.json my-rb 1.0.1
+    
+
+            - name: request_promotion
+              run: |
+                  curl "${{ vars.NOW_URL }}/api/x_1560608_jfrog_1/release_promotion_request" \
+                    --request PUT \
+                    --header "Accept:application/json" \
+                    --header "Content-Type:application/json" \
+                    --data "{\"project_key\":\"carmit-prj-1\",
+                    \"release_name\": \"my-rb\",
+                    \"release_version\":\"1.0.1\",
+                    \"target_environment\": \"DEV\"
+                    }" \
+                    --user 'admin':${{ secrets.SNOW_PASSWORD }}
 
             #- name: build scan
             #  run: |            
