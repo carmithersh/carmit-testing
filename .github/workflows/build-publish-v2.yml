@@ -13,7 +13,7 @@ jobs:
     build-publish-python:
         runs-on: ubuntu-latest              
         env:
-          DOCKER_REPO: 'carmit-prj-1-testing-docker-local'
+          DOCKER_REPO: 'carmit-prj-1-carmit-docker-local'
           IMAGE_NAME: 'my-very-cool-image:${{ github.run_number }}'
           JF_URL: https://${{ vars.JF_URL }}/
           DOCKER_CLI_EXPERIMENTAL: enabled
@@ -27,7 +27,7 @@ jobs:
                 JF_URL: https://${{ vars.JF_URL }}/
                 JF_PROJECT: carmit-prj-1
               with:
-                  oidc-provider-name: github-carmit-project-1
+                  oidc-provider-name: evidence-demo
 
             - name: Checkout the repository
               uses: actions/checkout@v4
@@ -36,7 +36,7 @@ jobs:
             - name: configure jfrog environment
               run: |
                 # Use a curated repository for python dependencies resolution
-                jf pip-config --repo-resolve=codeninjas-proj-python-virtual   
+                jf pip-config --repo-resolve=carmit-prj-1-carmit-python-remote 
 
             - name: configure environment
               run: |    
