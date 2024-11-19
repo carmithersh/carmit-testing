@@ -67,7 +67,7 @@ jobs:
                 
             - name: publish python package
               run: |
-                jf rt u dist/ codeninjas-proj-python-virtual/example-projects/ 
+                jf rt u dist/carmit-prj-1-carmit-python/example-projects/ 
 
            # - name: check file system post binary attestation
            #   run: |   
