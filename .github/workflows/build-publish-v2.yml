@@ -161,7 +161,7 @@ jobs:
                 echo "**************"
                 cat build.json
                 echo "**************"
-                jf release-bundle-create --signing-key test --spec build.json my-rb 1.0.3
+                jf release-bundle-create --signing-key test --spec build.json my-rb 1.0.4
     
 
             - name: request_promotion
