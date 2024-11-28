@@ -26,7 +26,7 @@ jobs:
               id: setup-cli
               env:
                 JF_URL: https://${{ vars.JF_URL }}/
-                JF_PROJECT: carmit-prj-1
+                #JF_PROJECT: carmit-prj-1
               with:
                   oidc-provider-name: evidence-demo
 
@@ -171,13 +171,14 @@ jobs:
                     --request PUT \
                     --header "Accept:application/json" \
                     --header "Content-Type:application/json" \
-                    --data "{\"project_key\":\"${{ env.JFROG_CLI_BUILD_PROJECT }}\",
-                    \"release_name\": \"my-rb\",
+                    --data "{\"release_name\": \"my-rb\",
                     \"release_version\":\"${{ env.RB_VERSION }}\",
                     \"target_environment\": \"DEV\"
                     }" \
                     --user 'admin':${{ secrets.SNOW_PASSWORD }}
-
+                    
+# removed \"project_key\":\"${{ env.JFROG_CLI_BUILD_PROJECT }}\",
+                    
             #- name: build scan
             #  run: |            
             #    jf build-scan
