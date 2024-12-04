@@ -162,7 +162,7 @@ jobs:
                 echo "**************"
                 cat build.json
                 echo "**************"
-                jf release-bundle-create --signing-key test --spec build.json my-rb ${{ env.RB_VERSION }}
+                jf release-bundle-create --signing-key test --spec build.json my-release-bundle-demo ${{ env.RB_VERSION }}
     
 
             - name: request_promotion
@@ -171,7 +171,7 @@ jobs:
                     --request PUT \
                     --header "Accept:application/json" \
                     --header "Content-Type:application/json" \
-                    --data "{\"release_name\": \"my-rb\",
+                    --data "{\"release_name\": \"my-release-bundle-demo\",
                     \"project_key\":\"${{ env.JFROG_CLI_BUILD_PROJECT }}\",
                     \"release_version\":\"${{ env.RB_VERSION }}\",
                     \"target_environment\": \"DEV\"
