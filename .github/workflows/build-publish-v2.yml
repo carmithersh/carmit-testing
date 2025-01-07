@@ -113,7 +113,7 @@ jobs:
               with:
                 subject-name: ${{ vars.JF_URL }}/${{ env.DOCKER_REPO }}/${{ env.IMAGE_NAME }}
                 subject-digest: ${{ steps.set_vars.outputs.docker_digest }}
-                push-to-registry: true
+                push-to-registry: false
             
             #- name: docker scan
             # disabled because sca fails now on failed with error: Found invalid token
