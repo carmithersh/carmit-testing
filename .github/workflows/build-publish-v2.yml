@@ -111,9 +111,9 @@ jobs:
             - name: Generate docker attestation
               uses: actions/attest-build-provenance@v1
               with:
-                subject-name: ${{ vars.JF_URL }}/${{ env.DOCKER_REPO }}/${{ env.IMAGE_NAME }}
+                subject-name: ${{ vars.JF_URL }}/${{ env.DOCKER_REPO }}/my-very-cool-image
                 subject-digest: ${{ steps.set_vars.outputs.docker_digest }}
-                push-to-registry: false
+                push-to-registry: true
             
             #- name: docker scan
             # disabled because sca fails now on failed with error: Found invalid token
