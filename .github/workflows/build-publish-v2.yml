@@ -109,12 +109,20 @@ jobs:
                  echo "docker_digest=$digest" | tr -d '"' >> $GITHUB_OUTPUT
 
             - name: Generate docker attestation
+              id: attest
               uses: actions/attest-build-provenance@v1
               with:
                 subject-name: ${{ vars.JF_URL }}/${{ env.DOCKER_REPO }}/my-very-cool-image
                 subject-digest: ${{ steps.set_vars.outputs.docker_digest }}
                 push-to-registry: true
-            
+
+            - name: check attestation bundle
+              run: |
+                echo "bundle-path=${{ steps.attest.outputs.bundle-path }} "
+                echo "----------------"
+                cat ${{ steps.attest.outputs.bundle-path }} 
+                echo "----------------"
+                
             #- name: docker scan
             # disabled because sca fails now on failed with error: Found invalid token
             #  run: |  
