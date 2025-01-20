@@ -215,7 +215,7 @@ jobs:
       with:
           image:  ${{ needs.build-publish-python.outputs.image }}
           digest: ${{ needs.build-publish-python.outputs.digest }}
-          private-repository: false          
-      #secrets:
-      #    registry-username: ${{ secrets.JF_ACCESS_USER }}
-      #    registry-password: ${{ secrets.JF_ACCESS_TOKEN }}
+          private-repository: true          
+      secrets:
+          registry-username: ${{ secrets.JF_ACCESS_USER }}
+          registry-password: ${{ secrets.JF_ACCESS_TOKEN }}
