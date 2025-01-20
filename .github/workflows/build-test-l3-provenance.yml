@@ -71,7 +71,7 @@ jobs:
             - name: Authenticate Docker
               uses: docker/login-action@v3
               with:
-                registry: ${{ vars.JF_HOST }}
+                registry: ${{ vars.JF_URL }}
                 username: ${{ steps.setup-cli.outputs.oidc-user }}
                 password: ${{ steps.setup-cli.outputs.oidc-token }}
               # docker image build
