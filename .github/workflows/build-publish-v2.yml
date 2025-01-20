@@ -1,8 +1,5 @@
 name: build-publish-scan
-on:
-    push:
-        branches:
-         main
+on: [push]
 permissions:
   actions: read # for detecting the Github Actions environment.
   id-token: write # for creating OIDC tokens for signing.
