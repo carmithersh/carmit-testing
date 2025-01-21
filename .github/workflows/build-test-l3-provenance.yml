@@ -114,5 +114,5 @@ jobs:
           digest: ${{ needs.build.outputs.digest }}
           private-repository: true  
       secrets:
-          registry-username: ${{ secrets.REGISTRY_USERNAME }}
-          registry-password: ${{ secrets.REGISTRY_TOKEN }}
+          registry-username: ${{ secrets.JF_ACCESS_USER }}
+          registry-password: ${{ secrets.JF_ACCESS_TOKEN }}
