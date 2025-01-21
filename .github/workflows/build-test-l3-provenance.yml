@@ -23,8 +23,6 @@ jobs:
         outputs:
           image:  ${{ vars.JF_URL }}/${{ env.DOCKER_REPO }}/${{ env.IMAGE_NAME }}
           digest: ${{ steps.build.outputs.digest }}
-          registry-username: ${{ steps.setup-cli.outputs.oidc-user }}
-          registry-password: ${{ steps.setup-cli.outputs.oidc-token }}
         steps:
             - name: Set up QEMU
               uses: docker/setup-qemu-action@v3
@@ -101,6 +99,11 @@ jobs:
                 jf rt build-add-dependencies .
                 jf rt build-add-git
                 jf rt build-publish
+            - name: save token
+              id: generate
+              run: |
+                echo "REGISTRY_USERNAME=${{ steps.setup-cli.outputs.oidc-user }}" >> $GITHUB_ENV
+                echo "REGISTRY_TOKEN=${{ steps.setup-cli.outputs.oidc-token }}" >> $GITHUB_ENV
 
     #SLSA Build Level 3 provenance
     provenance:
@@ -112,5 +115,5 @@ jobs:
           private-repository: true          
           print-provenance: true
       secrets:
-          registry-username: ${{ secrets.JF_ACCESS_USER }}
-          registry-password: ${{ secrets.JF_ACCESS_TOKEN }}
+          registry-username: ${{ secrets.REGISTRY_USERNAME }}
+          registry-password: ${{ secrets.REGISTRY_TOKEN }}
