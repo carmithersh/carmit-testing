@@ -23,6 +23,8 @@ jobs:
         outputs:
           image:  ${{ vars.JF_URL }}/${{ env.DOCKER_REPO }}/${{ env.IMAGE_NAME }}
           digest: ${{ steps.build.outputs.digest }}
+          registry-username: ${{ steps.setup-cli.outputs.oidc-user }}
+          registry-password: ${{ steps.setup-cli.outputs.oidc-token }}
         steps:
             - name: Set up QEMU
               uses: docker/setup-qemu-action@v3
@@ -108,6 +110,7 @@ jobs:
           image:  ${{ needs.build.outputs.image }}
           digest: ${{ needs.build.outputs.digest }}
           private-repository: true          
+          print-provenance: true
       secrets:
           registry-username: ${{ secrets.JF_ACCESS_USER }}
           registry-password: ${{ secrets.JF_ACCESS_TOKEN }}
