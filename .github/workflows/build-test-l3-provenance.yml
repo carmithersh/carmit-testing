@@ -24,6 +24,10 @@ jobs:
           image:  ${{ vars.JF_URL }}/${{ env.DOCKER_REPO }}/${{ env.IMAGE_NAME }}
           digest: ${{ steps.build.outputs.digest }}
         steps:
+            - name: Set up QEMU
+              uses: docker/setup-qemu-action@v3
+            - name: Set up Docker Buildx
+              uses: docker/setup-buildx-action@v3
             # Use the specific setup-cli branch
             - name: Setup JFrog CLI
               uses: jfrog/setup-jfrog-cli@v4
