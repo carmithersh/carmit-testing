@@ -112,8 +112,7 @@ jobs:
       with:
           image:  ${{ needs.build.outputs.image }}
           digest: ${{ needs.build.outputs.digest }}
-          private-repository: true          
-          print-provenance: true
+          private-repository: true  
       secrets:
           registry-username: ${{ secrets.REGISTRY_USERNAME }}
           registry-password: ${{ secrets.REGISTRY_TOKEN }}
