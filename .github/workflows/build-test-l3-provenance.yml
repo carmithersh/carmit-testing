@@ -89,12 +89,7 @@ jobs:
                 tags: ${{ vars.JF_URL }}/${{ env.DOCKER_REPO }}/${{ env.IMAGE_NAME }}
 
             - name: add docker package to build
-              run: |  
-                 echo "----------------"
-                 cat metadata.json
-                 echo "----------------"
-                 digest=$(cat metadata.json | jq '.["containerimage.digest"]')
-                 echo "digest=$digest"
+              run: |                                   
                  echo "${{ vars.JF_URL }}/${{ env.DOCKER_REPO }}/${{ env.IMAGE_NAME }}@${{ steps.build.outputs.digest }}" > metadata.json
                  jf rt build-docker-create ${{ env.DOCKER_REPO }} --image-file metadata.json 
 
