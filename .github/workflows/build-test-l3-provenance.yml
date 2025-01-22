@@ -99,12 +99,11 @@ jobs:
                 jf rt build-add-dependencies .
                 jf rt build-add-git
                 jf rt build-publish
-            - name: save token
-              id: generate
+            - name: print event payload
+              id: event
               run: |
-                echo "REGISTRY_USERNAME=${{ steps.setup-cli.outputs.oidc-user }}" >> $GITHUB_ENV
-                echo "REGISTRY_TOKEN=${{ steps.setup-cli.outputs.oidc-token }}" >> $GITHUB_ENV
-
+                echo "Full Event Payload: ${{ toJson(github.event) }}"
+                
     #SLSA Build Level 3 provenance
     provenance:
       needs: [build]
@@ -116,3 +115,23 @@ jobs:
       secrets:
           registry-username: ${{ secrets.JF_ACCESS_USER }}
           registry-password: ${{ secrets.JF_ACCESS_TOKEN }}
+
+    test_options:
+      runs-on: ubuntu-latest              
+      env:
+          DOCKER_REPO: 'test-docker-local'
+          IMAGE_NAME: 'my-very-cool-image:${{ github.run_number }}'
+          JF_URL: https://${{ vars.JF_URL }}/
+          JF_PROJECT: "default"
+          DOCKER_CLI_EXPERIMENTAL: enabled
+          NOW_URL: ${{ vars.NOW_URL }}
+          RB_VERSION: '2.0.1'
+      outputs:
+          image:  ${{ vars.JF_URL }}/${{ env.DOCKER_REPO }}/${{ env.IMAGE_NAME }}
+          digest: ${{ steps.build.outputs.digest }}
+      steps:
+      - name: print event payload
+        id: event
+        run: |
+          echo "Full Event Payload: ${{ toJson(github.event) }}"
+          
