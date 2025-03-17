@@ -66,7 +66,17 @@ jobs:
                 push: true
                 platforms: linux/amd64, linux/arm64
                 tags: ${{ vars.JF_URL }}/${{ env.DOCKER_REPO }}/${{ env.IMAGE_NAME }}          
-                        
+
+            - name: get docker digest
+              id: set_vars
+              run: |
+                echo "----------------"
+                cat metadata.json
+                echo "----------------"
+                digest=$(cat metadata.json | jq '.["containerimage.digest"]')
+                echo "digest=$digest"
+                echo "docker_digest=$digest" | tr -d '"' >> $GITHUB_OUTPUT
+
             - name: docker scan
               run: |  
                  jf docker pull ${{ vars.JF_URL }}/${{ env.DOCKER_REPO }}/${{ env.IMAGE_NAME }}
@@ -83,6 +93,12 @@ jobs:
                 jf rt bp 
                 jf build-scan  --format sarif --fail=false 
    
-
+            - name: Generate docker attestation
+              id: attest
+              uses: actions/attest-build-provenance@v1
+              with:
+                subject-name: ${{ vars.JF_URL }}/${{ env.DOCKER_REPO }}/${{ env.IMAGE_NAME }}
+                subject-digest: ${{ steps.set_vars.outputs.docker_digest }}
+                push-to-registry: true
            
       
