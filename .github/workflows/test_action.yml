@@ -1,0 +1,18 @@
+name: test_action
+on: [push]
+permissions:
+  actions: read # for detecting the Github Actions environment.
+  
+jobs:
+  hello_world_job:
+    runs-on: ubuntu-latest
+    name: A job to say hello
+    steps:
+      - name: Hello world action step
+        id: hello
+        uses: carmithersh/test_action@3df21c32bade19faf0f04741abe125e3e3b25ef7
+        with:
+          who-to-greet: 'Mona the Octocat'
+      # Use the output from the `hello` step
+      - name: Get the output time
+        run: echo "The time was ${{ steps.hello.outputs.time }}"
