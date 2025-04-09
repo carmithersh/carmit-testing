@@ -14,6 +14,7 @@ jobs:
         uses: carmithersh/test_action@3df21c32bade19faf0f04741abe125e3e3b25ef7
         with:
           who-to-greet: 'Carmit'
+          token: ${{ secrets.MYPAT }}
       # Use the output from the `hello` step
       - name: Get the output time
         run: echo "The time was ${{ steps.hello.outputs.time }}"
