@@ -8,16 +8,12 @@ jobs:
     runs-on: ubuntu-latest
     name: A job to say hello
     steps:
-      - uses: actions/checkout@V4
-        with:
-          token: ${{ secrets.MYPAT }}
-          repository: carmithersh/test_action
-          ref: main  
+     
       - name: Hello world action step
         id: hello
-        uses: ./  # carmithersh/test_action@3df21c32bade19faf0f04741abe125e3e3b25ef7
+        uses: carmithersh/test_action@3df21c32bade19faf0f04741abe125e3e3b25ef7
         with:
-          who-to-greet: 'Mona the Octocat'
+          who-to-greet: 'Carmit'
       # Use the output from the `hello` step
       - name: Get the output time
         run: echo "The time was ${{ steps.hello.outputs.time }}"
