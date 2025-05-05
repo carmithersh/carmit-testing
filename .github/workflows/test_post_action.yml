@@ -1,0 +1,87 @@
+name: test_action_post_event
+on: [push]
+permissions:
+  actions: read # for detecting the Github Actions environment.
+  contents: read
+  id-token: write
+  attestations: write
+jobs:
+  hello_world_job:
+    runs-on: ubuntu-latest
+    name: A job to say hello
+    env:
+          DOCKER_REPO: 'carmit-prj-1-carmit-docker-local'
+          IMAGE_NAME: 'github-jfrog-postaction-teting:1'
+          JFROG_CLI_BUILD_PROJECT: carmit-prj-1   
+    steps:
+      - name: Checkout the repository    
+        uses: actions/checkout@v4
+      - name: Install jfrog cli
+        id: setup-cli
+        uses: jfrog/setup-jfrog-cli@v4
+        env:
+          JF_URL: https://${{ vars.ARTIFACTORY_URL }}
+          JF_PROJECT: carmit-prj-1
+        with:
+         oidc-provider-name: jfrog-github-oidc
+      
+      - name: define post-event action
+        id: test-post
+        uses: carmithersh/test_post_action@main
+        with:
+          create-evidence: false
+
+      - name: configure jfrog environment
+        run: |
+          jf pip-config --repo-resolve=carmit-prj-1-carmit-python  
+            
+      - name: configure environment
+        run: |                      
+          python3 -m pip install --upgrade pip setuptools wheel sigstore
+          wheel -h
+          pip show setuptools
+          echo $VIRTUAL_ENV
+          
+      - name: build project
+        run: |                               
+          jf pip install -r requirements.txt --module=jfrog-python-example
+          python setup.py sdist bdist_wheel
+          cd dist && echo "hashes=$(sha256sum * | base64 -w0)" >> $GITHUB_OUTPUT
+
+      - name: publish python package
+        run: |
+          jf rt u dist/ carmit-prj-1-carmit-python-local/example-projects/ --module=jfrog-python-example 
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3    
+          
+      - name: Authenticate Docker
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ vars.ARTIFACTORY_URL }}
+          username: ${{ steps.setup-cli.outputs.oidc-user }} 
+          password: ${{ steps.setup-cli.outputs.oidc-token }}
+          
+      - name: Build Docker image    
+        uses: docker/build-push-action@v5
+        id: build
+        with:
+          push: true
+          platforms: linux/amd64, linux/arm64
+          tags: ${{ vars.ARTIFACTORY_URL }}/${{ env.DOCKER_REPO }}/${{ env.IMAGE_NAME }}          
+      
+      - name: Generate docker attestation
+        id: attest
+        uses: actions/attest-build-provenance@v1
+        with:
+          subject-name: ${{ vars.ARTIFACTORY_URL }}/${{ env.DOCKER_REPO }}/${{ env.IMAGE_NAME }}
+          subject-digest: ${{ steps.build.outputs.digest }}
+    
+      # print and get attestation bundle location into env var (optional)
+      - name: print attestation bundle location
+        run: |
+          echo "bundle-path:${{ steps.attest.outputs.bundle-path }}"
+          echo "bundle-path=${{ steps.attest.outputs.bundle-path }}" >> $GITHUB_OUTPUT
+          
+
+
