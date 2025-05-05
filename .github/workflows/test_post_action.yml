@@ -30,6 +30,7 @@ jobs:
         uses: carmithersh/test_post_action@main
         with:
           create-evidence: false
+          token: ${{ secrets.GHPAT }}
 
       - name: configure jfrog environment
         run: |
