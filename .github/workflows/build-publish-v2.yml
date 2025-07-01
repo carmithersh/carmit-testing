@@ -27,7 +27,7 @@ jobs:
               id: setup-cli
               env:
                 JF_URL: https://${{ vars.JF_URL }}/
-                #JF_PROJECT: ${{ env.JF_PROJECT }}
+                JF_PROJECT: ${{ env.JF_PROJECT }}
               with:
                   oidc-provider-name: evidence-demo
 
