@@ -13,7 +13,7 @@ jobs:
           DOCKER_REPO: 'test-docker-local'
           IMAGE_NAME: 'my-very-cool-image:${{ github.run_number }}'
           JF_URL: https://${{ vars.JF_URL }}/
-          JF_PROJECT: "default"
+          JF_PROJECT: ${{ vars.JF_PROJECT_KEY }}
           DOCKER_CLI_EXPERIMENTAL: enabled
           NOW_URL: ${{ vars.NOW_URL }}
           RB_VERSION: '1.0.8'
