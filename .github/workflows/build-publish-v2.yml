@@ -10,7 +10,7 @@ jobs:
     build-publish-python:
         runs-on: ubuntu-latest              
         env:
-          DOCKER_REPO: 'carmit-docker-local'
+          DOCKER_REPO: '${{ vars.JF_PROJECT_KEY }}-carmit-docker-local'
           IMAGE_NAME: 'my-very-cool-image:${{ github.run_number }}'
           JF_URL: https://${{ vars.JF_URL }}/
           JF_PROJECT: ${{ vars.JF_PROJECT_KEY }}
