@@ -6,7 +6,7 @@ permissions:
   packages: write # for uploading attestations.
   contents: read
   attestations: write
-jobs:
+jobs: 
     build-publish-python:
         runs-on: ubuntu-latest              
         env:
