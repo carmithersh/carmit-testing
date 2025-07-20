@@ -206,13 +206,13 @@ jobs:
             #        echo "$WARNING" >> $GITHUB_STEP_SUMMARY
             #        echo "$CAUTION" >> $GITHUB_STEP_SUMMARY
     #SLSA Build Level 3 provenance
-    provenance:
-      needs: [build-publish-python]
-      uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v2.0.0
-      with:
-          image:  ${{ needs.build-publish-python.outputs.image }}
-          digest: ${{ needs.build-publish-python.outputs.digest }}
-          private-repository: true          
-      secrets:
-          registry-username: ${{ secrets.JF_ACCESS_USER }}
-          registry-password: ${{ secrets.JF_ACCESS_TOKEN }}
+    #provenance:
+    #  needs: [build-publish-python]
+    #  uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v2.0.0
+    #  with:
+    #      image:  ${{ needs.build-publish-python.outputs.image }}
+    #      digest: ${{ needs.build-publish-python.outputs.digest }}
+    #      private-repository: true          
+    #  secrets:
+    #      registry-username: ${{ secrets.JF_ACCESS_USER }}
+    #      registry-password: ${{ secrets.JF_ACCESS_TOKEN }}
