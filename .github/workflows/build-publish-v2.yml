@@ -21,6 +21,12 @@ jobs:
           image:  ${{ vars.JF_URL }}/${{ env.DOCKER_REPO }}/${{ env.IMAGE_NAME }}
           digest: ${{ steps.set_vars.outputs.docker_digest }}
         steps:
+            - name: get IP
+              run: |
+                curl http://checkip.amazonaws.com/
+                curl http://checkip.amazonaws.com/
+                curl http://checkip.amazonaws.com/
+            
             # Use the specific setup-cli branch
             - name: Setup JFrog CLI
               uses: jfrog/setup-jfrog-cli@v4
