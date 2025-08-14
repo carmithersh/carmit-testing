@@ -27,8 +27,8 @@ jobs:
               env:
                 JF_URL: https://${{ vars.JF_URL }}/
                 JF_PROJECT: ${{ vars.JF_PROJECT_KEY }}
-              with:
-                  oidc-provider-name: jfrog-github-oidc
+                JF_ACCESS_TOKEN: ${{ secrets.JF_ACCESS_TOKEN }}
+       
 
             - name: Checkout the repository
               uses: actions/checkout@v4
