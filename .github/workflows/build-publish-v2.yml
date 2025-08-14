@@ -69,7 +69,7 @@ jobs:
                 
             - name: publish python package
               run: |
-                jf rt u dist/ ${{ env.JF_PROJECT }}-carmit-python/example-projects/
+                jf rt u dist/ ${{ env.JF_PROJECT }}-carmit-python-local/example-projects/
 
            # - name: check file system post binary attestation
            #   run: |   
