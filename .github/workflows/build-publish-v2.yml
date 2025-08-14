@@ -13,7 +13,6 @@ jobs:
           DOCKER_REPO: '${{ vars.JF_PROJECT_KEY }}-carmit-docker-local'
           IMAGE_NAME: 'my-very-cool-image:${{ github.run_number }}'
           JF_URL: https://${{ vars.JF_URL }}/
-          JF_PROJECT: ${{ vars.JF_PROJECT_KEY }}
           DOCKER_CLI_EXPERIMENTAL: enabled
           NOW_URL: ${{ vars.NOW_URL }}
           RB_VERSION: '1.0.0'
@@ -27,7 +26,7 @@ jobs:
               id: setup-cli
               env:
                 JF_URL: https://${{ vars.JF_URL }}/
-                JF_PROJECT: ${{ env.JF_PROJECT }}
+                JF_PROJECT: ${{ vars.JF_PROJECT_KEY }}
               with:
                   oidc-provider-name: jfrog-github-oidc
 
@@ -38,7 +37,7 @@ jobs:
             - name: configure jfrog environment
               run: |
                 # Use a curated repository for python dependencies resolution
-                jf pip-config --repo-resolve=${{ env.JF_PROJECT }}-carmit-python-remote 
+                jf pip-config --repo-resolve=${{ vars.JF_PROJECT_KEY }}-carmit-python-remote 
 
             - name: configure environment
               run: |    
@@ -69,7 +68,8 @@ jobs:
                 
             - name: publish python package
               run: |
-                jf rt u dist/ ${{ env.JF_PROJECT }}-carmit-python-local/example-projects/
+                echo "user=${{ steps.setup-cli.outputs.oidc-user }}"
+                jf rt u dist/ ${{ vars.JF_PROJECT_KEY }}-carmit-python-local/
 
            # - name: check file system post binary attestation
            #   run: |   
