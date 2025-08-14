@@ -110,11 +110,11 @@ jobs:
 
             - name: Generate docker attestation
               id: attest
-              uses: actions/attest-build-provenance@v1
+              uses: actions/attest-build-provenance@v2
               with:
                 subject-name: ${{ vars.JF_URL }}/${{ env.DOCKER_REPO }}/my-very-cool-image
                 subject-digest: ${{ steps.set_vars.outputs.docker_digest }}
-                push-to-registry: true
+                # push-to-registry: true
 
             - name: check attestation bundle
               run: |
@@ -122,7 +122,7 @@ jobs:
                 echo "----------------"
                 cat ${{ steps.attest.outputs.bundle-path }} 
                 echo "----------------"
-                
+            
             #- name: docker scan
             # disabled because sca fails now on failed with error: Found invalid token
             #  run: |  
@@ -165,13 +165,13 @@ jobs:
                 jf rt build-add-git
                 jf rt build-publish
 
-            - name: create release bundle
-              run: |
-                echo '{"files":[{"build": "${{ env.JFROG_CLI_BUILD_NAME }}/${{ env.JFROG_CLI_BUILD_NUMBER }}","includeDeps": "false","project":"${{ env.JFROG_CLI_BUILD_PROJECT }}"}]}' > build.json
-                echo "**************"
-                cat build.json
-                echo "**************"
-                jf release-bundle-create --signing-key test --spec build.json my-release-bundle-demo ${{ env.RB_VERSION }}
+            #- name: create release bundle
+            #  run: |
+            #    echo '{"files":[{"build": "${{ env.JFROG_CLI_BUILD_NAME }}/${{ env.JFROG_CLI_BUILD_NUMBER }}","includeDeps": "false","project":"${{ env.JFROG_CLI_BUILD_PROJECT }}"}]}' > build.json
+            #    echo "**************"
+            #    cat build.json
+            #    echo "**************"
+            #    jf release-bundle-create --signing-key test --spec build.json my-release-bundle-demo ${{ env.RB_VERSION }}
     
 
           #  - name: request_promotion
