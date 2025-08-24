@@ -36,7 +36,7 @@ jobs:
       - name: read props from docker-info.properties
         id: read_props
         run: |
-          source .github/scripts/packages/barber-shop-packages/jfrog-info.properties
+          source ./jfrog-info.properties
           echo "ARTIFACTORY_HOST=$ARTIFACTORY_HOST"
           echo "ARTIFACTORY_HOST=$ARTIFACTORY_HOST" | tr -d '"' >> $GITHUB_OUTPUT
           echo "LOCAL_REPO_NAME=$LOCAL_REPO_NAME"
