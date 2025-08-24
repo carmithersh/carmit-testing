@@ -62,8 +62,8 @@ jobs:
         id: build-and-push
         working-directory: ${{ env.PACKAGE_DIR }}
         run: |
-          docker build --tag ${{ vars.ARTIFACTORY_HOST }}/${{ vars.LOCAL_REPO_NAME }}/${{ env.PACKAGE_NAME }}:${{ github.run_number }} --platform linux/amd64 --metadata-file metadata.json --load .
-          jf rt docker-push ${{ vars.ARTIFACTORY_HOST }}/${{ vars.LOCAL_REPO_NAME }}/${{ env.PACKAGE_NAME }}:${{ github.run_number }} ${{ vars.LOCAL_REPO_NAME }}
+          docker build --tag ${{ vars.ARTIFACTORY_HOST }}/${{ vars.LOCAL_REPO_NAME }}/${{ env.PACKAGE_NAME }}:${{ github.run_number }} --platform linux/amd64 --metadata-file metadata.json --push .
+          #jf rt docker-push ${{ vars.ARTIFACTORY_HOST }}/${{ vars.LOCAL_REPO_NAME }}/${{ env.PACKAGE_NAME }}:${{ github.run_number }} ${{ vars.LOCAL_REPO_NAME }}
           digest=$(cat metadata.json | jq '.["containerimage.digest"]')
           echo "docker_digest=$digest" | tr -d '"' >> $GITHUB_OUTPUT
 
@@ -108,11 +108,11 @@ jobs:
         run: |
           ./scripts/generate_sonar_markdown.sh ./sonar_report.json ./sonar_report.md
 
-      - name: Attach evidence using jfrog cli
-        working-directory: ${{ env.PACKAGE_DIR }}
-        run: |
-          jf evd create --sigstore-bundle ${{ steps.attest.outputs.bundle-path }} \
-            --subject-repo-path ${{ vars.LOCAL_REPO_NAME }}/${{ env.PACKAGE_NAME }}/${{ github.run_number }}/manifest.json \                        
+      #- name: Attach evidence using jfrog cli
+      #  working-directory: ${{ env.PACKAGE_DIR }}
+      #  run: |
+      #    jf evd create --sigstore-bundle ${{ steps.attest.outputs.bundle-path }} \
+      #      --subject-repo-path ${{ vars.LOCAL_REPO_NAME }}/${{ env.PACKAGE_NAME }}/${{ github.run_number }}/manifest.json \                        
 
       - name: Attach sonar evidence using jfrog cli
         working-directory: ${{ env.PACKAGE_DIR }}
