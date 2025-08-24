@@ -1,2 +1,2 @@
 #!/bin/bash
-echo test.sh
+echo "IN test.sh"
