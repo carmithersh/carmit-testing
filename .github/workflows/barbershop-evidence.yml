@@ -76,6 +76,10 @@ jobs:
         id: extract-content
         working-directory: ${{ env.PACKAGE_DIR }}
         run: |
+          echo "pwd"
+          pwd
+          echo "ls -ltr ."
+          ls -ltr .
           cp "${{ steps.attest.outputs.bundle-path }}" ./attestation_bundle.json
           echo "------------------attestation bundle-----------------"
           cat ${{ steps.attest.outputs.bundle-path }}
