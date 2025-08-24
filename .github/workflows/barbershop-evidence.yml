@@ -121,7 +121,7 @@ jobs:
           --package-name ${{ env.PACKAGE_NAME }} \
           --package-version ${{ github.run_number }} \
           --package-repo-name ${{ vars.LOCAL_REPO_NAME }} \
-          --key ${{ secrets.JFROG_CLI_SIGNING_KEY }} \
+          --key "${{ secrets.JFROG_CLI_SIGNING_KEY }}" \
           --key-alias "${{ vars.EVIDENCE_KEY_ALIAS }}" \
           --predicate-type https://jfrog.com/evidence/sonar-scan/v1 \
           --predicate ./sonar_report.json \
