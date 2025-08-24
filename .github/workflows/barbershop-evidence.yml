@@ -33,6 +33,11 @@ jobs:
       - name: Run tests
         working-directory: ${{ env.PACKAGE_DIR }}
         run: npm test
+      - name: read props from docker-info.properties
+        run: |
+          source jfrog-info.properties
+          echo "ARTIFACTORY_HOST= $ARTIFACTORY_HOSTR"
+          echo "LOCAL_REPO_NAME= $LOCAL_REPO_NAME"
 
       - name: Setup JFrog CLI
         id: setup-cli
