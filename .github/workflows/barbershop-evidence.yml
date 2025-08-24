@@ -30,29 +30,35 @@ jobs:
         working-directory: ${{ env.PACKAGE_DIR }}
         run: npm install
 
-      - name: Run tests
+      - name: Run tests        
         working-directory: ${{ env.PACKAGE_DIR }}
         run: npm test
+        
       - name: read props from docker-info.properties
+        id: read_props
         run: |
           source .github/scripts/packages/barber-shop-packages/jfrog-info.properties
           echo "ARTIFACTORY_HOST=$ARTIFACTORY_HOST"
+          echo "ARTIFACTORY_HOST=$ARTIFACTORY_HOST" | tr -d '"' >> $GITHUB_OUTPUT
           echo "LOCAL_REPO_NAME=$LOCAL_REPO_NAME"
+          echo "LOCAL_REPO_NAME=$LOCAL_REPO_NAME" | tr -d '"' >> $GITHUB_OUTPUT
           echo "ARTIFACTORY_URL=$ARTIFACTORY_URL"
+          echo "ARTIFACTORY_URL=$ARTIFACTORY_URL" | tr -d '"' >> $GITHUB_OUTPUT
           echo "OIDC_PROVIDER_NAME=$OIDC_PROVIDER_NAME"
+          echo "OIDC_PROVIDER_NAME=$OIDC_PROVIDER_NAME" | tr -d '"' >> $GITHUB_OUTPUT
           
       - name: Setup JFrog CLI
         id: setup-cli
         uses: jfrog/setup-jfrog-cli@v4
         env:
-          JF_URL: $ARTIFACTORY_URL
+          JF_URL: ${{ steps.read_props.outputs.ARTIFACTORY_URL }}
         with:
-          oidc-provider-name: $OIDC_PROVIDER_NAME
+          oidc-provider-name: ${{ steps.read_props.outputs.OIDC_PROVIDER_NAME }}
 
       - name: Authenticate Docker
         uses: docker/login-action@v3
         with:
-          registry: $ARTIFACTORY_HOST
+          registry: ${{ steps.read_props.outputs.ARTIFACTORY_HOST }}
           username: ${{ steps.setup-cli.outputs.oidc-user }}
           password: ${{ steps.setup-cli.outputs.oidc-token }}
 
@@ -69,8 +75,8 @@ jobs:
         id: build-and-push
         working-directory: ${{ env.PACKAGE_DIR }}
         run: |
-          docker build --tag $ARTIFACTORY_HOST/$LOCAL_REPO_NAME/${{ env.PACKAGE_NAME }}:${{ github.run_number }} --metadata-file metadata.json --push .
-          #jf rt docker-push $ARTIFACTORY_HOST/$LOCAL_REPO_NAME/${{ env.PACKAGE_NAME }}:${{ github.run_number }} ${{ vars.LOCAL_REPO_NAME }}
+          docker build --tag ${{ steps.read_props.outputs.ARTIFACTORY_HOST }}/${{ steps.read_props.outputs.LOCAL_REPO_NAME }}/${{ env.PACKAGE_NAME }}:${{ github.run_number }} --metadata-file metadata.json --push .
+          #jf rt docker-push ${{ steps.read_props.outputs.ARTIFACTORY_HOST }}/${{ steps.read_props.outputs.LOCAL_REPO_NAME }}/${{ env.PACKAGE_NAME }}:${{ github.run_number }} ${{ steps.read_props.outputs.LOCAL_REPO_NAME }}
           digest=$(cat metadata.json | jq '.["containerimage.digest"]')
           echo "docker_digest=$digest" | tr -d '"' >> $GITHUB_OUTPUT
 
@@ -78,7 +84,7 @@ jobs:
         id: attest
         uses: actions/attest-build-provenance@v2
         with:
-          subject-name: $LOCAL_REPO_NAME/${{ env.PACKAGE_NAME }}/${{ github.run_number }}/list.manifest.json
+          subject-name: ${{ steps.read_props.outputs.LOCAL_REPO_NAME }}/${{ env.PACKAGE_NAME }}/${{ github.run_number }}/list.manifest.json
           subject-digest: ${{ steps.build-and-push.outputs.docker_digest }}
 
       - name: Extract and decode attestation content
@@ -119,7 +125,7 @@ jobs:
       #  working-directory: ${{ env.PACKAGE_DIR }}
       #  run: |
       #    jf evd create --sigstore-bundle ${{ steps.attest.outputs.bundle-path }} \
-      #      --subject-repo-path $LOCAL_REPO_NAME/${{ env.PACKAGE_NAME }}/${{ github.run_number }}/manifest.json \                        
+      #      --subject-repo-path ${{ steps.read_props.outputs.LOCAL_REPO_NAME }}/${{ env.PACKAGE_NAME }}/${{ github.run_number }}/manifest.json \                        
 
       - name: Attach sonar evidence using jfrog cli
         working-directory: ${{ env.PACKAGE_DIR }}
@@ -127,7 +133,7 @@ jobs:
           jf evd create \
           --package-name ${{ env.PACKAGE_NAME }} \
           --package-version ${{ github.run_number }} \
-          --package-repo-name $LOCAL_REPO_NAME \
+          --package-repo-name ${{ steps.read_props.outputs.LOCAL_REPO_NAME }} \
           --key "${{ secrets.JFROG_CLI_SIGNING_KEY }}" \
           --key-alias "${{ vars.EVIDENCE_KEY_ALIAS }}" \
           --predicate-type https://jfrog.com/evidence/sonar-scan/v1 \
