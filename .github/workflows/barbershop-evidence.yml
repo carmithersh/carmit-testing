@@ -62,7 +62,7 @@ jobs:
         id: build-and-push
         working-directory: ${{ env.PACKAGE_DIR }}
         run: |
-          docker build --tag ${{ vars.ARTIFACTORY_HOST }}/${{ vars.LOCAL_REPO_NAME }}/${{ env.PACKAGE_NAME }}:${{ github.run_number }} --platform linux/amd64 --metadata-file metadata.json --push .
+          docker build --tag ${{ vars.ARTIFACTORY_HOST }}/${{ vars.LOCAL_REPO_NAME }}/${{ env.PACKAGE_NAME }}:${{ github.run_number }} --metadata-file metadata.json --push .
           #jf rt docker-push ${{ vars.ARTIFACTORY_HOST }}/${{ vars.LOCAL_REPO_NAME }}/${{ env.PACKAGE_NAME }}:${{ github.run_number }} ${{ vars.LOCAL_REPO_NAME }}
           digest=$(cat metadata.json | jq '.["containerimage.digest"]')
           echo "docker_digest=$digest" | tr -d '"' >> $GITHUB_OUTPUT
