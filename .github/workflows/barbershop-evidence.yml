@@ -84,8 +84,8 @@ jobs:
           echo "------------------attestation bundle-----------------"
           cat ${{ steps.attest.outputs.bundle-path }}
           echo "-----------------------------"
-          cat ./attestation_bundle.json | jq -r '.dsseEnvelope.payload' | base64 -d > ./decoded_payload.json
-          ./scripts/generate_attestation_markdown.sh ./decoded_payload.json ./attestation_summary.md
+          #cat ./attestation_bundle.json | jq -r '.dsseEnvelope.payload' | base64 -d > ./decoded_payload.json
+          #./scripts/generate_attestation_markdown.sh ./decoded_payload.json ./attestation_summary.md
 
       - name: Get Sonar report
         working-directory: ${{ env.PACKAGE_DIR }}
