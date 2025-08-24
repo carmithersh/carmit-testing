@@ -1,11 +1,10 @@
 name: Barbershop Service Docker Workflow
 
 on:
-  workflow_dispatch:
+  workflow_dispatch: 
 
 env:
   PACKAGE_DIR: .github/scripts/packages/barber-shop-packages
-  PACKAGE_NAME: book-service
 
 jobs:
   build-and-push-docker:
@@ -37,7 +36,7 @@ jobs:
       - name: read props from docker-info.properties
         id: read_props
         run: |
-          source ./jfrog-info.properties
+          source .github/scripts/packages/barber-shop-packages/jfrog-info.properties
           echo "ARTIFACTORY_HOST=$ARTIFACTORY_HOST"
           echo "ARTIFACTORY_HOST=$ARTIFACTORY_HOST" | tr -d '"' >> $GITHUB_OUTPUT
           echo "LOCAL_REPO_NAME=$LOCAL_REPO_NAME"
@@ -46,6 +45,10 @@ jobs:
           echo "ARTIFACTORY_URL=$ARTIFACTORY_URL" | tr -d '"' >> $GITHUB_OUTPUT
           echo "OIDC_PROVIDER_NAME=$OIDC_PROVIDER_NAME"
           echo "OIDC_PROVIDER_NAME=$OIDC_PROVIDER_NAME" | tr -d '"' >> $GITHUB_OUTPUT
+          echo "PACKAGE_NAME=$PACKAGE_NAME"
+          echo "PACKAGE_NAME=$PACKAGE_NAME" | tr -d '"' >> $GITHUB_OUTPUT
+          echo "VERSION=$VERSION"
+          echo "VERSION=$VERSION" | tr -d '"' >> $GITHUB_OUTPUT
           
       - name: Setup JFrog CLI
         id: setup-cli
@@ -75,8 +78,8 @@ jobs:
         id: build-and-push
         working-directory: ${{ env.PACKAGE_DIR }}
         run: |
-          docker build --tag ${{ steps.read_props.outputs.ARTIFACTORY_HOST }}/${{ steps.read_props.outputs.LOCAL_REPO_NAME }}/${{ env.PACKAGE_NAME }}:${{ github.run_number }} --metadata-file metadata.json --push .
-          #jf rt docker-push ${{ steps.read_props.outputs.ARTIFACTORY_HOST }}/${{ steps.read_props.outputs.LOCAL_REPO_NAME }}/${{ env.PACKAGE_NAME }}:${{ github.run_number }} ${{ steps.read_props.outputs.LOCAL_REPO_NAME }}
+          docker build --tag ${{ steps.read_props.outputs.ARTIFACTORY_HOST }}/${{ steps.read_props.outputs.LOCAL_REPO_NAME }}/${{ steps.read_props.outputs.PACKAGE_NAME }}:${{ steps.read_props.outputs.VERSION }} --metadata-file metadata.json --push .
+          #jf rt docker-push ${{ steps.read_props.outputs.ARTIFACTORY_HOST }}/${{ steps.read_props.outputs.LOCAL_REPO_NAME }}/${{ steps.read_props.outputs.PACKAGE_NAME }}:${{ steps.read_props.outputs.VERSION }} ${{ steps.read_props.outputs.LOCAL_REPO_NAME }}
           digest=$(cat metadata.json | jq '.["containerimage.digest"]')
           echo "docker_digest=$digest" | tr -d '"' >> $GITHUB_OUTPUT
 
@@ -84,7 +87,7 @@ jobs:
         id: attest
         uses: actions/attest-build-provenance@v2
         with:
-          subject-name: ${{ steps.read_props.outputs.LOCAL_REPO_NAME }}/${{ env.PACKAGE_NAME }}/${{ github.run_number }}/list.manifest.json
+          subject-name: ${{ steps.read_props.outputs.LOCAL_REPO_NAME }}/${{ steps.read_props.outputs.PACKAGE_NAME }}/${{ steps.read_props.outputs.VERSION }}/list.manifest.json
           subject-digest: ${{ steps.build-and-push.outputs.docker_digest }}
 
       - name: Extract and decode attestation content
@@ -125,14 +128,14 @@ jobs:
       #  working-directory: ${{ env.PACKAGE_DIR }}
       #  run: |
       #    jf evd create --sigstore-bundle ${{ steps.attest.outputs.bundle-path }} \
-      #      --subject-repo-path ${{ steps.read_props.outputs.LOCAL_REPO_NAME }}/${{ env.PACKAGE_NAME }}/${{ github.run_number }}/manifest.json \                        
+      #      --subject-repo-path ${{ steps.read_props.outputs.LOCAL_REPO_NAME }}/${{ steps.read_props.outputs.PACKAGE_NAME }}/${{ steps.read_props.outputs.VERSION }}/manifest.json \                        
 
       - name: Attach sonar evidence using jfrog cli
         working-directory: ${{ env.PACKAGE_DIR }}
         run: |      
           jf evd create \
-          --package-name ${{ env.PACKAGE_NAME }} \
-          --package-version ${{ github.run_number }} \
+          --package-name ${{ steps.read_props.outputs.PACKAGE_NAME }} \
+          --package-version ${{ steps.read_props.outputs.VERSION }} \
           --package-repo-name ${{ steps.read_props.outputs.LOCAL_REPO_NAME }} \
           --key "${{ secrets.JFROG_CLI_SIGNING_KEY }}" \
           --key-alias "${{ vars.EVIDENCE_KEY_ALIAS }}" \
