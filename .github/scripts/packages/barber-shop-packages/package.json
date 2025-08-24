@@ -1,0 +1,33 @@
+{
+  "name": "book-service",
+  "version": "1.0.0",
+  "description": "A booking service for barbershop management",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "test": "node tests/test.js"
+  },
+  "keywords": [
+    "barbershop",
+    "booking",
+    "appointment",
+    "scheduling",
+    "service"
+  ],
+  "author": "Barber Shop Tools",
+  "license": "MIT",
+  "dependencies": {},
+  "devDependencies": {},
+  "files": [
+    "src/index.js",
+    "package.json"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-username/barber-shop-tools.git"
+  },
+  "bugs": {
+    "url": "https://github.com/your-username/barber-shop-tools/issues"
+  },
+  "homepage": "https://github.com/your-username/barber-shop-tools#readme"
+}
