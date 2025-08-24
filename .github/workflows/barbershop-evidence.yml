@@ -17,6 +17,9 @@ jobs:
     
     steps:
       - uses: actions/checkout@v4
+      - name: allow scripts execution
+        run: |
+          chmod 775 ${{ env.PACKAGE_DIR }}/scripts/*
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
