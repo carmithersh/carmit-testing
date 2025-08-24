@@ -106,7 +106,7 @@ jobs:
       - name: Generate Sonar markdown
         working-directory: ${{ env.PACKAGE_DIR }}
         run: |
-          .github/scripts/packages/barber-shop-packages/scripts/generate_sonar_markdown.sh ./sonar_report.json ./sonar_report.md
+          ./scripts/generate_sonar_markdown.sh ./sonar_report.json ./sonar_report.md
 
       - name: Attach evidence using jfrog cli
         working-directory: ${{ env.PACKAGE_DIR }}
