@@ -16,8 +16,7 @@ jobs:
       attestations: write
     
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -94,9 +93,13 @@ jobs:
           --header 'Accept: application/json' \
           --header 'Authorization: Bearer ${{ secrets.SONAR_TOKEN }}' \
           --output sonar_report.json
+      
+      - name: test script
+        run: |
+         .github/scripts/packages/barber-shop-packages/scripts/test.sh
+      
 
       - name: Generate Sonar markdown
-        working-directory: ${{ env.PACKAGE_DIR }}
         run: |
           .github/scripts/packages/barber-shop-packages/scripts/generate_sonar_markdown.sh ./sonar_report.json ./sonar_report.md
 
