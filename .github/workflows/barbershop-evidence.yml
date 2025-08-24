@@ -9,7 +9,7 @@ env:
 
 jobs:
   build-and-push-docker:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     permissions:
       contents: write
       id-token: write
@@ -35,7 +35,7 @@ jobs:
         run: npm test
       - name: read props from docker-info.properties
         run: |
-          source jfrog-info.properties
+          source .github/scripts/packages/barber-shop-packages/jfrog-info.properties
           echo "ARTIFACTORY_HOST= $ARTIFACTORY_HOSTR"
           echo "LOCAL_REPO_NAME= $LOCAL_REPO_NAME"
 
