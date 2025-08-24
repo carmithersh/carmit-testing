@@ -1,0 +1,117 @@
+name: Barbershop Service Docker Workflow
+
+on:
+  workflow_dispatch:
+
+env:
+  PACKAGE_DIR: .github/scripts/packages/barber-shop-packages
+  PACKAGE_NAME: book-service
+
+jobs:
+  build-and-push-docker:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 'latest'
+
+      - name: Install dependencies
+        working-directory: ${{ env.PACKAGE_DIR }}
+        run: npm install
+
+      - name: Run tests
+        working-directory: ${{ env.PACKAGE_DIR }}
+        run: npm test
+
+      - name: Setup JFrog CLI
+        id: setup-cli
+        uses: jfrog/setup-jfrog-cli@v4
+        env:
+          JF_URL: ${{ vars.ARTIFACTORY_URL }}
+        with:
+          oidc-provider-name: ${{ vars.OIDC_PROVIDER_NAME }}
+
+      - name: Authenticate Docker
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ vars.ARTIFACTORY_HOST }}
+          username: ${{ steps.setup-cli.outputs.oidc-user }}
+          password: ${{ steps.setup-cli.outputs.oidc-token }}
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        with:
+          platforms: linux/amd64,linux/arm64
+          install: true 
+
+      - name: Build and push Docker image
+        id: build-and-push
+        working-directory: ${{ env.PACKAGE_DIR }}
+        run: |
+          docker build --tag ${{ vars.ARTIFACTORY_HOST }}/${{ vars.LOCAL_REPO_NAME }}/${{ env.PACKAGE_NAME }}:${{ github.run_number }} --platform linux/amd64 --metadata-file metadata.json --load .
+          jf rt docker-push ${{ vars.ARTIFACTORY_HOST }}/${{ vars.LOCAL_REPO_NAME }}/${{ env.PACKAGE_NAME }}:${{ github.run_number }} ${{ vars.LOCAL_REPO_NAME }}
+          digest=$(cat metadata.json | jq '.["containerimage.digest"]')
+          echo "docker_digest=$digest" | tr -d '"' >> $GITHUB_OUTPUT
+
+      - name: Generate Docker attestation
+        id: attest
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-name: ${{ vars.LOCAL_REPO_NAME }}/${{ env.PACKAGE_NAME }}/${{ github.run_number }}/manifest.json
+          subject-digest: ${{ steps.build-and-push.outputs.docker_digest }}
+
+      - name: Extract and decode attestation content
+        id: extract-content
+        working-directory: ${{ env.PACKAGE_DIR }}
+        run: |
+          cp "${{ steps.attest.outputs.bundle-path }}" ./attestation_bundle.json
+          echo "------------------attestation bundle-----------------"
+          cat ${{ steps.attest.outputs.bundle-path }}
+          echo "-----------------------------"
+          cat ./attestation_bundle.json | jq -r '.dsseEnvelope.payload' | base64 -d > ./decoded_payload.json
+          ./scripts/generate_attestation_markdown.sh ./decoded_payload.json ./attestation_summary.md
+
+      - name: Get Sonar report
+        working-directory: ${{ env.PACKAGE_DIR }}
+        run: |
+          curl --location 'https://api.sonarcloud.io/dop-translation/jfrog-evidence/AZjGllrsJNTbE25TYCVl' \
+          --header 'Accept: application/json' \
+          --header 'Authorization: Bearer ${{ secrets.SONAR_TOKEN }}' \
+          --output sonar_report.json
+
+      - name: Generate Sonar markdown
+        working-directory: ${{ env.PACKAGE_DIR }}
+        run: |
+          ./scripts/generate_sonar_markdown.sh ./sonar_report.json ./sonar_report.md
+
+      - name: Attach evidence using jfrog cli
+        working-directory: ${{ env.PACKAGE_DIR }}
+        run: |
+          jf evd create --sigstore-bundle ${{ steps.attest.outputs.bundle-path }} \
+            --subject-repo-path ${{ vars.LOCAL_REPO_NAME }}/${{ env.PACKAGE_NAME }}/${{ github.run_number }}/manifest.json \                        
+
+      - name: Attach sonar evidence using jfrog cli
+        working-directory: ${{ env.PACKAGE_DIR }}
+        run: |      
+          jf evd create \
+          --package-name ${{ env.PACKAGE_NAME }} \
+          --package-version ${{ github.run_number }} \
+          --package-repo-name ${{ vars.LOCAL_REPO_NAME }} \
+          --key "${{ secrets.PRIVATE_KEY }}" \
+          --key-alias "${{ vars.EVIDENCE_KEY_ALIAS }}" \
+          --predicate-type https://jfrog.com/evidence/sonar-scan/v1 \
+          --predicate ./sonar_report.json \
+          --markdown ./sonar_report.md \
+          --provider-id sonar
