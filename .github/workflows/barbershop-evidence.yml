@@ -79,6 +79,7 @@ jobs:
           pwd
           echo "ls -ltr ."
           ls -ltr .
+          ls -ltr ./scripts
           cp "${{ steps.attest.outputs.bundle-path }}" ./attestation_bundle.json
           echo "------------------attestation bundle-----------------"
           cat ${{ steps.attest.outputs.bundle-path }}
