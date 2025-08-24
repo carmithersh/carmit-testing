@@ -71,7 +71,7 @@ jobs:
         id: attest
         uses: actions/attest-build-provenance@v2
         with:
-          subject-name: ${{ vars.LOCAL_REPO_NAME }}/${{ env.PACKAGE_NAME }}/${{ github.run_number }}/manifest.json
+          subject-name: ${{ vars.LOCAL_REPO_NAME }}/${{ env.PACKAGE_NAME }}/${{ github.run_number }}/list.manifest.json
           subject-digest: ${{ steps.build-and-push.outputs.docker_digest }}
 
       - name: Extract and decode attestation content
