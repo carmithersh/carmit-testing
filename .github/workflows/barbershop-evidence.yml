@@ -115,10 +115,10 @@ jobs:
       #    --output sonar_report.json
       
 
-      - name: Generate Sonar markdown
-        working-directory: ${{ env.PACKAGE_DIR }}
-        run: |
-          ./scripts/generate_sonar_markdown.sh ./assets/sonar/sonar_report.json ./sonar_report.md
+      #- name: Generate Sonar markdown
+      #  working-directory: ${{ env.PACKAGE_DIR }}
+      #  run: |
+      #    ./scripts/generate_sonar_markdown.sh ./assets/sonar/sonar_report.json ./sonar_report.md
 
       #- name: Attach evidence using jfrog cli
       #  working-directory: ${{ env.PACKAGE_DIR }}
@@ -136,6 +136,6 @@ jobs:
           --key "${{ secrets.JFROG_CLI_SIGNING_KEY }}" \
           --key-alias "${{ vars.EVIDENCE_KEY_ALIAS }}" \
           --predicate-type https://jfrog.com/evidence/sonar-scan/v1 \
-          --predicate ./sonar_report.json \
-          --markdown ./sonar_report.md \
+          --predicate ./assets/sonar/sonar_report.json \
+          --markdown ./assets/sonar/sonar_report.md \
           --provider-id sonar
