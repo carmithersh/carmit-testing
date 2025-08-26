@@ -106,23 +106,19 @@ jobs:
           cat ./attestation_bundle.json | jq -r '.dsseEnvelope.payload' | base64 -d > ./decoded_payload.json
           ./scripts/generate_attestation_markdown.sh ./decoded_payload.json ./attestation_summary.md
 
-      - name: Get Sonar report
-        working-directory: ${{ env.PACKAGE_DIR }}
-        run: |
-          curl --location 'https://api.sonarcloud.io/dop-translation/jfrog-evidence/AZjGllrsJNTbE25TYCVl' \
-          --header 'Accept: application/json' \
-          --header 'Authorization: Bearer ${{ secrets.SONAR_TOKEN }}' \
-          --output sonar_report.json
-      
-      - name: test script
-        run: |
-         .github/scripts/packages/barber-shop-packages/scripts/test.sh
+      #- name: Get Sonar report
+      #  working-directory: ${{ env.PACKAGE_DIR }}
+      #  run: |
+      #    curl --location 'https://api.sonarcloud.io/dop-translation/jfrog-evidence/AZjGllrsJNTbE25TYCVl' \
+      #    --header 'Accept: application/json' \
+      #    --header 'Authorization: Bearer ${{ secrets.SONAR_TOKEN }}' \
+      #    --output sonar_report.json
       
 
       - name: Generate Sonar markdown
         working-directory: ${{ env.PACKAGE_DIR }}
         run: |
-          ./scripts/generate_sonar_markdown.sh ./sonar_report.json ./sonar_report.md
+          ./scripts/generate_sonar_markdown.sh ./data/sonar_report.json ./sonar_report.md
 
       #- name: Attach evidence using jfrog cli
       #  working-directory: ${{ env.PACKAGE_DIR }}
