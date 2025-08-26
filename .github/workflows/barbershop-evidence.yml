@@ -118,7 +118,7 @@ jobs:
       - name: Generate Sonar markdown
         working-directory: ${{ env.PACKAGE_DIR }}
         run: |
-          ./scripts/generate_sonar_markdown.sh ./data/sonar_report.json ./sonar_report.md
+          ./scripts/generate_sonar_markdown.sh ./assets/sonar/sonar_report.json ./sonar_report.md
 
       #- name: Attach evidence using jfrog cli
       #  working-directory: ${{ env.PACKAGE_DIR }}
