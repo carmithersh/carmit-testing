@@ -1,7 +1,4 @@
 {
-  "_type" : "https://in-toto.io/Statement/v1",
-  "predicateType" : "https://sonarsource.com/evidence/sonarqube/v1",
-  "predicate" : {
     "gates" : [ {
       "type" : "QUALITY",
       "status" : "OK",
@@ -38,8 +35,4 @@
         "actualValue" : "0.0"
       } ]
     } ]
-  },
-  "createdAt" : "2025-08-21T08:24:24.507Z",
-  "createdBy" : "SonarQube",
-  "markdown" : "<h1>Quality Gate passed</h1>Computed on 2025-08-21T08:24:24.503215100Z<h3>Passed conditions</h3>Reliability Rating on new code <span style=\"color:grey\">(value 1 is greater than threshold 1)</span> <br> Security Rating on new code <span style=\"color:grey\">(value 1 is greater than threshold 1)</span> <br> Maintainability Rating on new code <span style=\"color:grey\">(value 1 is greater than threshold 1)</span> <br> Duplicated Lines Density on new code <span style=\"color:grey\">(value 0.0 is greater than threshold 3)</span> <br> Security Hotspots Reviewed on new code <span style=\"color:grey\">(value 0.0 is less than threshold 0)</span> <br> "
-}
+  }
