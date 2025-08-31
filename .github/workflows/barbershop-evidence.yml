@@ -1,4 +1,4 @@
-name: Barbershop Service Docker Workflow
+name: napapizza Service Docker Workflow
 
 on:
   workflow_dispatch: 
