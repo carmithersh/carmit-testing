@@ -56,6 +56,7 @@ jobs:
         env:
           JF_URL: ${{ steps.read_props.outputs.ARTIFACTORY_URL }}
         with:
+          version: latest
           oidc-provider-name: ${{ steps.read_props.outputs.OIDC_PROVIDER_NAME }}
 
       - name: Authenticate Docker
@@ -134,7 +135,7 @@ jobs:
           --package-version ${{ steps.read_props.outputs.VERSION }} \
           --package-repo-name ${{ steps.read_props.outputs.LOCAL_REPO_NAME }} \
           --key "${{ secrets.JFROG_CLI_SIGNING_KEY }}" \
-          --key-alias "${{ vars.EVIDENCE_KEY_ALIAS }}" \
+          --key-alias "${{ vars.EVIDENCE_KEY_ALIAS }}_xxx" \
           --predicate-type https://sonarsource.com/evidence/sonarqube/v1 \
           --predicate ./assets/sonar/sonar_report.json \
           --markdown ./assets/sonar/sonar_report.md \
