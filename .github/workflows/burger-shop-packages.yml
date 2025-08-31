@@ -1,4 +1,4 @@
-name: napapizza Service Docker Workflow
+name: burger-shop-packages Service Docker Workflow
 
 on:
   workflow_dispatch: 
