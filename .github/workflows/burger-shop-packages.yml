@@ -79,6 +79,7 @@ jobs:
         id: build-and-push
         working-directory: ${{ env.PACKAGE_DIR }}
         run: |
+          jf --version
           docker build --tag ${{ steps.read_props.outputs.ARTIFACTORY_HOST }}/${{ steps.read_props.outputs.LOCAL_REPO_NAME }}/${{ steps.read_props.outputs.PACKAGE_NAME }}:${{ steps.read_props.outputs.VERSION }} --metadata-file metadata.json --push .
           #jf rt docker-push ${{ steps.read_props.outputs.ARTIFACTORY_HOST }}/${{ steps.read_props.outputs.LOCAL_REPO_NAME }}/${{ steps.read_props.outputs.PACKAGE_NAME }}:${{ steps.read_props.outputs.VERSION }} ${{ steps.read_props.outputs.LOCAL_REPO_NAME }}
           digest=$(cat metadata.json | jq '.["containerimage.digest"]')
