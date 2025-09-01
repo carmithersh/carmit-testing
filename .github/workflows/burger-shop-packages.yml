@@ -138,4 +138,4 @@ jobs:
           --predicate-type https://sonarsource.com/evidence/sonarqube/v1 \
           --predicate ./assets/sonar/sonar_report.json \
           --markdown ./assets/sonar/sonar_report.md \
-          --provider-id sonar
+          --provider-id sonarsource
