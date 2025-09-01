@@ -126,16 +126,14 @@ jobs:
       #  working-directory: ${{ env.PACKAGE_DIR }}
       #  run: |
       #    jf evd create --sigstore-bundle ${{ steps.attest.outputs.bundle-path }} \
-      #      --subject-repo-path ${{ steps.read_props.outputs.LOCAL_REPO_NAME }}/${{ steps.read_props.outputs.PACKAGE_NAME }}/${{ steps.read_props.outputs.VERSION }}/manifest.json \                        
+      #      --subject-repo-path ${{ steps.read_props.outputs.LOCAL_REPO_NAME }}/${{ steps.read_props.outputs.PACKAGE_NAME }}/${{ steps.read_props.outputs.VERSION }}/list.manifest.json \                        
 
       - name: Attach sonar evidence using jfrog cli
         working-directory: ${{ env.PACKAGE_DIR }}
         run: |      
           jf evd create \
           --provider-id sonar \
-          --package-name ${{ steps.read_props.outputs.PACKAGE_NAME }} \
-          --package-version ${{ steps.read_props.outputs.VERSION }} \
-          --package-repo-name ${{ steps.read_props.outputs.LOCAL_REPO_NAME }} \
+          --subject-repo-path ${{ steps.read_props.outputs.LOCAL_REPO_NAME }}/${{ steps.read_props.outputs.PACKAGE_NAME }}/${{ steps.read_props.outputs.VERSION }}/list.manifest.json \
           --key "${{ secrets.JFROG_CLI_SIGNING_KEY }}" \
           --key-alias "${{ vars.EVIDENCE_KEY_ALIAS }}" \
           --predicate-type https://sonarsource.com/evidence/sonarqube/v1 \
