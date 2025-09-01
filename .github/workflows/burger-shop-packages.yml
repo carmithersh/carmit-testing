@@ -136,7 +136,7 @@ jobs:
           --subject-repo-path ${{ steps.read_props.outputs.LOCAL_REPO_NAME }}/${{ steps.read_props.outputs.PACKAGE_NAME }}/${{ steps.read_props.outputs.VERSION }}/list.manifest.json \
           --key "${{ secrets.JFROG_CLI_SIGNING_KEY }}" \
           --key-alias "${{ vars.EVIDENCE_KEY_ALIAS }}" \
-          --predicate-type https://sonarsource.com/evidence/sonarqube/v1 \
+          --predicate-type https://sonar.com/evidence/sonarqube/v1 \
           --predicate ./assets/sonar/sonar_report.json \
           --markdown ./assets/sonar/sonar_report.md 
           
