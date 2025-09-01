@@ -132,6 +132,7 @@ jobs:
         working-directory: ${{ env.PACKAGE_DIR }}
         run: |      
           jf evd create \
+          --provider-id sonar \
           --package-name ${{ steps.read_props.outputs.PACKAGE_NAME }} \
           --package-version ${{ steps.read_props.outputs.VERSION }} \
           --package-repo-name ${{ steps.read_props.outputs.LOCAL_REPO_NAME }} \
@@ -139,5 +140,5 @@ jobs:
           --key-alias "${{ vars.EVIDENCE_KEY_ALIAS }}" \
           --predicate-type https://sonarsource.com/evidence/sonarqube/v1 \
           --predicate ./assets/sonar/sonar_report.json \
-          --markdown ./assets/sonar/sonar_report.md \
-          --provider-id sonar
+          --markdown ./assets/sonar/sonar_report.md 
+          
