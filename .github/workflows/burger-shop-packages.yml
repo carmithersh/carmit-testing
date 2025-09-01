@@ -55,7 +55,8 @@ jobs:
         uses: jfrog/setup-jfrog-cli@v4
         env:
           JF_URL: ${{ steps.read_props.outputs.ARTIFACTORY_URL }}
-        with:          
+        with:  
+          version: latest
           oidc-provider-name: ${{ steps.read_props.outputs.OIDC_PROVIDER_NAME }}
 
       - name: Authenticate Docker
