@@ -9,6 +9,7 @@ on:
         required: true
         type: string
 
+
 jobs:
   sign-artifact:
     runs-on: ubuntu-latest
