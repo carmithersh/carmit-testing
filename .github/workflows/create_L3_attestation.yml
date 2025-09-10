@@ -1,0 +1,34 @@
+name: Sign Artifact
+on:
+  workflow_call:
+    inputs:
+      subject-name:
+        required: true
+        type: string
+      subject-digest:
+        required: true
+        type: string
+
+jobs:
+  sign-artifact:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      attestations: write
+      contents: read
+
+    steps:
+    - name: Setup JFrog CLI
+      id: setup-cli
+      uses: jfrog/setup-jfrog-cli@v4
+      env:
+        JF_URL: https://${{ vars.ARTIFACTORY_URL }}
+      with:  
+        version: latest
+        oidc-provider-name: jfrog-github-oidc        
+        
+    - name: Attest Build Provenance
+      uses: actions/attest-build-provenance@v3
+      with:
+        subject-name: ${{ inputs.subject-name }}
+        subject-digest: ${{ inputs.subject-digest }}
