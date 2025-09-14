@@ -29,7 +29,7 @@ jobs:
       id: setup-cli
       uses: jfrog/setup-jfrog-cli@v4
       env:
-        JF_URL: https://${{ jfrog-platform-host }}
+        JF_URL: https://${{ inputs.jfrog-platform-host }}
       with:  
         version: latest
         oidc-provider-name: ${{ inputs.oidc-provider }}        
