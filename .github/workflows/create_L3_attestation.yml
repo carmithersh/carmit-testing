@@ -8,6 +8,12 @@ on:
       subject-digest:
         required: true
         type: string
+      oidc-provider:
+        required: true
+        type: string
+      jfrog-platform-host:
+        required: true
+        type: string
 
 
 jobs:
@@ -23,10 +29,10 @@ jobs:
       id: setup-cli
       uses: jfrog/setup-jfrog-cli@v4
       env:
-        JF_URL: https://${{ vars.ARTIFACTORY_URL }}
+        JF_URL: https://${{ jfrog-platform-host }}
       with:  
         version: latest
-        oidc-provider-name: jfrog-github-oidc        
+        oidc-provider-name: ${{ inputs.oidc-provider }}        
         
     - name: Attest Build Provenance
       uses: actions/attest-build-provenance@v3
