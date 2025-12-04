@@ -15,7 +15,7 @@ jobs:
     build:
         runs-on: ubuntu-latest              
         env:
-          DOCKER_REPO: 'test-docker-local'
+          DOCKER_REPO: 'carmit-project-local-test'
           IMAGE_NAME: 'my-very-cool-image:${{ github.run_number }}'
           JF_URL: https://${{ vars.JF_URL }}/
           JF_PROJECT: "default"
@@ -47,7 +47,7 @@ jobs:
             - name: configure jfrog environment
               run: |
                 # Use a curated repository for python dependencies resolution
-                jf pip-config --repo-resolve=carmit-prj-1-carmit-python-remote 
+                jf pip-config --repo-resolve=carmit-project-pypi-remote
 
             - name: configure environment
               run: |    
@@ -72,7 +72,7 @@ jobs:
    
             - name: publish python package
               run: |
-                jf rt u dist/ carmit-prj-1-carmit-python/example-projects/
+                jf rt u dist/ carmit-project-pypi-local/example-projects/
 
             - name: Authenticate Docker
               uses: docker/login-action@v3
