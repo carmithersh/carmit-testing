@@ -114,6 +114,6 @@ jobs:
       with:
         subject-name: oci://${{ needs.build.outputs.rt_host }}/${{ needs.build.outputs.image }}
         subject-digest: ${{ needs.build.outputs.digest }}
-        oidc-provider: jfrog-github-oidc
+        oidc-provider: evidence-demo
         jfrog-platform-host: ${{ needs.build.outputs.rt_host }}
 
