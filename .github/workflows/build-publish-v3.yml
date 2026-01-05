@@ -1,6 +1,10 @@
 name: oidc-forked-cli
-on: [push]
-
+on:
+    push:
+        branches:
+         main
+        
+    workflow_dispatch: 
 permissions:
   actions: read # for detecting the Github Actions environment.
   id-token: write # for creating OIDC tokens for signing.
@@ -11,8 +15,7 @@ jobs:
         runs-on: ubuntu-latest
         env:
           DOCKER_REPO: 'docker-local'
-          IMAGE_NAME: 'github-jfrog-testing:1'
-          JFROG_CLI_BUILD_PROJECT: carmit-prj-1         
+          IMAGE_NAME: 'github-jfrog-testing:1'      
         outputs:
           image: ${{ vars.JF_URL }}/${{ env.DOCKER_REPO }}/${{ env.IMAGE_NAME }}
           digest: ${{ steps.build.outputs.digest }}
@@ -22,7 +25,7 @@ jobs:
               
             - name: Setup JFrog CLI
               id: setup-cli
-              uses: carmithersh/setup-jfrog-cli@master
+              uses: jfrog/setup-jfrog-cli@latest
               env: 
                 JF_URL: https://${{ vars.JF_URL }}/
               with:
