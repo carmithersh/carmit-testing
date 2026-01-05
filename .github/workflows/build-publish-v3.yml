@@ -12,7 +12,7 @@ permissions:
   contents: read
 jobs:
     build-publish:        
-        runs-on: carmith-mac
+        runs-on: self-hosted
         env:
           DOCKER_REPO: 'docker-local'
           IMAGE_NAME: 'github-jfrog-testing:1'      
