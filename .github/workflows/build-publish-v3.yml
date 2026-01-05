@@ -25,7 +25,7 @@ jobs:
               
             - name: Setup JFrog CLI
               id: setup-cli
-              uses: jfrog/setup-jfrog-cli@latest
+              uses: jfrog/setup-jfrog-cli@v4
               env: 
                 JF_URL: https://${{ vars.JF_URL }}/
               with:
