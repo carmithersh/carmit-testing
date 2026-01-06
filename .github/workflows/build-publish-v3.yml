@@ -15,7 +15,7 @@ jobs:
         runs-on: self-hosted
         env:
           DOCKER_REPO: 'docker-local'
-          IMAGE_NAME: 'github-jfrog-testing:2'      
+          IMAGE_NAME: 'github-jfrog-testing:3'      
         outputs:
           image: ${{ vars.JF_URL }}/${{ env.DOCKER_REPO }}/${{ env.IMAGE_NAME }}
           digest: ${{ steps.build.outputs.digest }}
