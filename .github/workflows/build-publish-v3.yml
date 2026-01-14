@@ -70,15 +70,6 @@ jobs:
                 platforms: linux/amd64, linux/arm64
                 tags: ${{ vars.JF_URL }}/${{ env.DOCKER_REPO }}/${{ env.IMAGE_NAME }}          
 
-            - name: get docker digest
-              id: set_vars
-              run: |
-                echo "----------------"
-                cat metadata.json
-                echo "----------------"
-                digest=$(cat metadata.json | jq '.["containerimage.digest"]')
-                echo "digest=$digest"
-                echo "docker_digest=$digest" | tr -d '"' >> $GITHUB_OUTPUT
 
             - name: docker scan
               run: |  
