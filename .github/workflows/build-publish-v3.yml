@@ -88,10 +88,14 @@ jobs:
                 jf rt bce 
                 jf rt bp 
                 jf build-scan  --format sarif --fail=false 
-   
+            - name: prepare attestation vars
+              run: |
+              # parse out sha256: from ${{ steps.build.outputs.digest }}
+              
+            
             - name: Attest Build Provenance
               uses: actions/attest-build-provenance@v3
               with:
-                subject-name: oci://${{ vars.JF_URL }}/${{ env.DOCKER_REPO }}/github-jfrog-testing
+                subject-name: ${{ vars.JF_URL }}/${{ env.DOCKER_REPO }}/github-jfrog-testing
                 subject-digest: ${{ steps.build.outputs.digest }}
       
