@@ -15,7 +15,8 @@ jobs:
         runs-on: ubuntu-latest #self-hosted
         env:
           DOCKER_REPO: 'docker-local'
-          IMAGE_NAME: 'github-jfrog-testing:3'      
+          IMAGE_NAME: 'github-jfrog-testing:3'  
+          
         outputs:
           image: ${{ vars.JF_URL }}/${{ env.DOCKER_REPO }}/${{ env.IMAGE_NAME }}
           digest: ${{ steps.build.outputs.digest }}
@@ -91,6 +92,6 @@ jobs:
             - name: Attest Build Provenance
               uses: actions/attest-build-provenance@v3
               with:
-                subject-name: oci://${{ vars.JF_URL }}/${{ env.DOCKER_REPO }}/${{ env.IMAGE_NAME }}
+                subject-name: oci://${{ vars.JF_URL }}/${{ env.DOCKER_REPO }}/github-jfrog-testing
                 subject-digest: ${{ steps.build.outputs.digest }}
       
