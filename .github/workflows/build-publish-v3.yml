@@ -91,6 +91,6 @@ jobs:
             - name: Attest Build Provenance
               uses: actions/attest-build-provenance@v3
               with:
-                subject-name: oci://${{ vars.JF_URL }}/${{ steps.build.outputs.image }}
-                subject-digest: ${{ vars.JF_URL }}/${{ env.DOCKER_REPO }}/${{ env.IMAGE_NAME }}
+                subject-name: oci://${{ vars.JF_URL }}/${{ env.DOCKER_REPO }}/${{ env.IMAGE_NAME }}
+                subject-digest: ${{ steps.build.outputs.digest }}
       
