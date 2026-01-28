@@ -1,4 +1,4 @@
-name: oidc-forked-cli
+name: ctoa_test
 on:
     push:
         branches:
