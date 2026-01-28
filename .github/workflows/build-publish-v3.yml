@@ -88,12 +88,8 @@ jobs:
               run: |
                 jf rt bce 
                 jf rt bp 
-                jf build-scan  --format sarif --fail=false 
-            - name: prepare attestation vars
-              run: |
-              # parse out sha256: from ${{ steps.build.outputs.digest }}
-              
-            
+                #jf build-scan  --format sarif --fail=false 
+          
             - name: Attest Build Provenance
               uses: actions/attest-build-provenance@v3
               with:
