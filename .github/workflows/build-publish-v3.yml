@@ -30,6 +30,7 @@ jobs:
               uses: jfrog/setup-jfrog-cli@v4
               env: 
                 JF_URL: https://${{ vars.JF_URL }}/
+                JF_PROJECT: gadgetsnew
               with:
                   oidc-provider-name: github-carmit-project-1
        
