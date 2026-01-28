@@ -29,7 +29,7 @@ jobs:
               id: setup-cli
               uses: jfrog/setup-jfrog-cli@v4
               env: 
-                CTOA_JF_URL: https://${{ vars.CTOA_CTOA_JF_URL }}/
+                JF_URL: https://${{ vars.CTOA_JF_URL }}/
                 JF_PROJECT: carmit
               with:
                   oidc-provider-name: github-carmit-project-1
