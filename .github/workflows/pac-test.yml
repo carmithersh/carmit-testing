@@ -1,9 +1,5 @@
 name: pac_test
 on:
-    push:
-        branches:
-         main
-        
     workflow_dispatch: 
 permissions:
   actions: read # for detecting the Github Actions environment.
@@ -13,7 +9,7 @@ permissions:
   attestations: write  
 jobs:
     build-publish:        
-        runs-on: ubuntu-latest
+        runs-on: self-hosted
         env:
           DOCKER_REPO: 'carmit-docker-local'
           IMAGE_NAME: 'github-jfrog-testing:${{ github.run_number }}'  
