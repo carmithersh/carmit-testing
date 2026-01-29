@@ -1,9 +1,5 @@
 name: ctoa_test
 on:
-    push:
-        branches:
-         main
-        
     workflow_dispatch: 
 permissions:
   actions: read # for detecting the Github Actions environment.
