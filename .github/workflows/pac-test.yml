@@ -1,4 +1,4 @@
-name: ctoa_test
+name: pac_test
 on:
     push:
         branches:
