@@ -13,7 +13,7 @@ permissions:
   attestations: write  
 jobs:
     build-publish:        
-        runs-on: self-hosted
+        runs-on: ubuntu-latest
         env:
           PROJECT: 'coyote'
           IMAGE_NAME: 'github-jfrog-testing:${{ github.run_number }}'  
