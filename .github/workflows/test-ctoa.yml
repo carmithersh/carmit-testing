@@ -100,6 +100,6 @@ jobs:
         uses: carmithersh/carmit-testing/.github/workflows/create_L3_attestation.yml@main 
         with:
             subject-name: oci://${{ needs.build.outputs.rt_host }}/${{ needs.build.outputs.image }}
-             subject-digest: ${{ needs.build.outputs.digest }}
+            subject-digest: ${{ needs.build.outputs.digest }}
             oidc-provider: github-carmit-project-1
             jfrog-platform-host: ${{ needs.build.outputs.rt_host }}
