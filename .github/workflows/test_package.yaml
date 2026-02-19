@@ -57,9 +57,16 @@ jobs:
           }
           GRAPHQL
           )
+          echo "==================================="
+          echo "QUERY=$QUERY"
+          echo "==================================="
 
           QUERY=$(echo "$QUERY" | sed "s/NAME_PLACEHOLDER/${PACKAGE_NAME}/g" | sed "s/TYPE_PLACEHOLDER/${PACKAGE_TYPE}/g" | sed "s/PROJECT_PLACEHOLDER/${PROJECT}/g" | sed "s/VERSION_PLACEHOLDER/${PACKAGE_VERSION}/g" | sed "s/REPO_PLACEHOLDER/${PACKAGE_REPO}/g")
 
+          echo "==================================="
+          echo "QUERY=$QUERY"
+          echo "==================================="
+          
           RESPONSE=$(curl -s -X POST \
             -H "Authorization: Bearer ${{ steps.setup-jfrog-cli.outputs.jfrog-token }}" \
             -H "Content-Type: application/json" \
