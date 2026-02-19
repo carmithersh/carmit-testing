@@ -6,18 +6,23 @@ on:
       package_repo:
         description: 'JFrog repository key (e.g., docker-local, pypi-local)'
         required: true
+        default: 'pac-ai-generator-docker-prod'
       package_name:
-        description: 'Package name/path'
+        description: 'Package name'
         required: true
+        default: 'pac-ai-generator'
       package_version:
         description: 'Package version or tag'
         required: true
+        default: '5'
       package_type:
         description: 'Package type (e.g., pypi, docker, npm)'
         required: true
+        default: 'docker'
       project:
         description: 'JFrog project key'
         required: false
+        default: 'pac-ai-generator'
 
 permissions:
   id-token: write
