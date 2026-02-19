@@ -10,7 +10,7 @@ on:
       package_name:
         description: 'Package name'
         required: true
-        default: 'pac-ai-generator'
+        default: 'github-jfrog-testing'
       package_version:
         description: 'Package version or tag'
         required: true
