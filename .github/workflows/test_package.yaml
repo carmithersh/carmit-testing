@@ -1,0 +1,130 @@
+name: OPA Evidence Evaluation
+
+on:
+  workflow_dispatch:
+    inputs:
+      package_repo:
+        description: 'JFrog repository key (e.g., docker-local, pypi-local)'
+        required: true
+      package_name:
+        description: 'Package name/path'
+        required: true
+      package_version:
+        description: 'Package version or tag'
+        required: true
+      package_type:
+        description: 'Package type (e.g., pypi, docker, npm)'
+        required: true
+      project:
+        description: 'JFrog project key'
+        required: false
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  evaluate-evidence:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup JFrog CLI
+        id: setup-jfrog-cli
+        uses: jfrog/setup-jfrog-cli@v4
+        env:
+          JF_URL: https://${{ vars.JF_URL }}/
+        with:
+          oidc-provider-name: github-oidc
+
+      - name: Setup OPA
+        uses: open-policy-agent/setup-opa@v2
+        with:
+          version: latest
+
+      - name: Get Package Digest
+        env:
+          PACKAGE_REPO: ${{ inputs.package_repo }}
+          PACKAGE_NAME: ${{ inputs.package_name }}
+          PACKAGE_VERSION: ${{ inputs.package_version }}
+          PACKAGE_TYPE: ${{ inputs.package_type }}
+          PROJECT: ${{ inputs.project }}
+        run: |
+          QUERY=$(cat <<'GRAPHQL'
+          {
+            "query": "query get_package { storedPackages { getPackage(name: \"NAME_PLACEHOLDER\", type: \"TYPE_PLACEHOLDER\", projectKey: \"PROJECT_PLACEHOLDER\") { name type versionsConnection(first:1, where: { version: \"VERSION_PLACEHOLDER\" }) { edges { node { version locationsConnection(first: 1, where: { repositoryKey: \"REPO_PLACEHOLDER\" }) { edges { node { repositoryKey artifactsConnection(first:1, where:{ isLeadArtifact:true }) { edges { node { name sha256 } } } } } } } } } } } }"
+          }
+          GRAPHQL
+          )
+
+          QUERY=$(echo "$QUERY" | sed "s/NAME_PLACEHOLDER/${PACKAGE_NAME}/g" | sed "s/TYPE_PLACEHOLDER/${PACKAGE_TYPE}/g" | sed "s/PROJECT_PLACEHOLDER/${PROJECT}/g" | sed "s/VERSION_PLACEHOLDER/${PACKAGE_VERSION}/g" | sed "s/REPO_PLACEHOLDER/${PACKAGE_REPO}/g")
+
+          RESPONSE=$(curl -s -X POST \
+            -H "Authorization: Bearer ${{ steps.setup-jfrog-cli.outputs.jfrog-token }}" \
+            -H "Content-Type: application/json" \
+            "https://${{ vars.JF_URL }}/onemodel/api/v1/graphql" \
+            -d "$QUERY")
+
+          PACKAGE_SHA256=$(echo "$RESPONSE" | jq -r '.data.storedPackages.getPackage.versionsConnection.edges[0].node.locationsConnection.edges[0].node.artifactsConnection.edges[0].node.sha256')
+
+          if [ -z "$PACKAGE_SHA256" ] || [ "$PACKAGE_SHA256" = "null" ]; then
+            echo "::error::Failed to retrieve package digest"
+            exit 1
+          fi
+
+          echo "Package SHA256: $PACKAGE_SHA256"
+          echo "PACKAGE_SHA256=$PACKAGE_SHA256" >> "$GITHUB_ENV"
+
+      - name: Query JFrog Evidence
+        env:
+          PACKAGE_REPO: ${{ inputs.package_repo }}
+        run: |
+          QUERY=$(cat <<'GRAPHQL'
+          {
+            "query": "{ evidence { searchEvidence(where: { hasSubjectWith: { repositoryKey: \"REPO_PLACEHOLDER\", sha256: \"SHA256_PLACEHOLDER\" } }) { edges { node { predicateType predicate verified createdBy createdAt predicateCategory signingKey { alias } } } } } }"
+          }
+          GRAPHQL
+          )
+
+          QUERY=$(echo "$QUERY" | sed "s/REPO_PLACEHOLDER/${PACKAGE_REPO}/g" | sed "s/SHA256_PLACEHOLDER/${PACKAGE_SHA256}/g")
+
+          curl -s -X POST \
+            -H "Authorization: Bearer ${{ steps.setup-jfrog-cli.outputs.jfrog-token }}" \
+            -H "Content-Type: application/json" \
+            "https://${{ vars.JF_URL }}/onemodel/api/v1/graphql" \
+            -d "$QUERY" > evidence_response.json
+
+          echo "Evidence response received"
+
+      - name: Prepare OPA Input
+        run: |
+          PREDICATE_TYPES='["https://slsa.dev/provenance/v1","https://sonarsource.com/evidence/sonarqube/v1"]'
+          REQUIRED_GIT_ORG_PREFIX="git+https://github.com/carmithersh"
+
+          jq --argjson pts "${PREDICATE_TYPES}" \
+             --arg gitPrefix "${REQUIRED_GIT_ORG_PREFIX}" '{
+            evidence: .data.evidence.searchEvidence.edges,
+            params: {
+              predicateTypes: $pts,
+              requiredGitOrgPrefix: $gitPrefix
+            }
+          }' evidence_response.json > input.json
+
+      - name: Evaluate OPA Policy
+        run: |
+          RESULT=$(opa eval -i input.json -d .github/policies/opa-policy.rego "data.evidence.policy.result" --format json)
+
+          ALLOW=$(echo "$RESULT" | jq -r '.result[0].expressions[0].value.allow')
+          MESSAGE=$(echo "$RESULT" | jq -r '.result[0].expressions[0].value.message // "No message"')
+          MISSING=$(echo "$RESULT" | jq -r '.result[0].expressions[0].value.missing // []')
+
+          echo "OPA Result: allow=$ALLOW, message=$MESSAGE"
+
+          if [ "$ALLOW" != "true" ]; then
+            echo "::error::Evidence policy check failed: $MESSAGE"
+            echo "Missing evidence types: $MISSING"
+            exit 1
+          fi
+
+          echo "Evidence policy check passed"
