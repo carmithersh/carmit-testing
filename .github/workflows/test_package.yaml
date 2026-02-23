@@ -58,18 +58,16 @@ jobs:
         run: |
           QUERY=$(echo '{"query": "query get_package { storedPackages { getPackage(name: \"NAME_PLACEHOLDER\", type: \"TYPE_PLACEHOLDER\", projectKey: \"PROJECT_PLACEHOLDER\") { name type versionsConnection(first:1, where: { version: \"VERSION_PLACEHOLDER\" }) { edges { node { version locationsConnection(first: 1, where: { repositoryKey: \"REPO_PLACEHOLDER\" }) { edges { node { repositoryKey artifactsConnection(first:1, where:{ isLeadArtifact:true }) { edges { node { name sha256 } } } } } } } } } } } }","variables":{}}}')
           
-          QUERY2=$(echo "$QUERY" | sed "s/NAME_PLACEHOLDER/${PACKAGE_NAME}/g" | sed "s/TYPE_PLACEHOLDER/${PACKAGE_TYPE}/g" | sed "s/PROJECT_PLACEHOLDER/${PROJECT}/g" | sed "s/VERSION_PLACEHOLDER/${PACKAGE_VERSION}/g" | sed "s/REPO_PLACEHOLDER/${PACKAGE_REPO}/g")
+          QUERY=$(echo "$QUERY" | sed "s/NAME_PLACEHOLDER/${PACKAGE_NAME}/g" | sed "s/TYPE_PLACEHOLDER/${PACKAGE_TYPE}/g" | sed "s/PROJECT_PLACEHOLDER/${PROJECT}/g" | sed "s/VERSION_PLACEHOLDER/${PACKAGE_VERSION}/g" | sed "s/REPO_PLACEHOLDER/${PACKAGE_REPO}/g")
 
           RESPONSE=$(curl -s -XPOST \
             -H "Authorization: Bearer ${{ steps.setup-jfrog-cli.outputs.oidc-token }}" \
             -H "Content-Type: application/json" \
-            "https://${{ vars.JF_URL }}/onemodel/api/v1/graphql" --data "$QUERY2")
+            "https://${{ vars.JF_URL }}/onemodel/api/v1/graphql" --data "$QUERY")
           
           echo "--------------------------------"
-          echo "Query: $QUERY2"
-          echo "--------------------------------"
-          echo "Response: $RESPONSE"
-          echo "--------------------------------"
+          echo "Query: $QUERY"
+
 
           PACKAGE_SHA256=$(echo "$RESPONSE" | jq -r '.data.storedPackages.getPackage.versionsConnection.edges[0].node.locationsConnection.edges[0].node.artifactsConnection.edges[0].node.sha256')
 
@@ -93,16 +91,21 @@ jobs:
           )
 
           QUERY=$(echo "$QUERY" | sed "s/REPO_PLACEHOLDER/${PACKAGE_REPO}/g" | sed "s/SHA256_PLACEHOLDER/${PACKAGE_SHA256}/g")
-
-          curl -s -X POST \
+          echo "--------------------------------"
+          echo "Query: $QUERY"
+          
+          RESPONSE=$(curl -s -X POST \
             -H "Authorization: Bearer ${{ steps.setup-jfrog-cli.outputs.oidc-token }}" \
             -H "Content-Type: application/json" \
             "https://${{ vars.JF_URL }}/onemodel/api/v1/graphql" \
-            -d "$QUERY" > evidence_response.json
-
+            -d "$QUERY")
+            
           echo "--------------------------------"
-          echo "Evidence response received: 
-          cat evidence_response.json
+          echo "Response: $RESPONSE"
+          echo "--------------------------------"
+          echo $RESPONSE > evidence_response.json
+          echo "--------------------------------"
+          echo "Evidence response received:           
           echo "--------------------------------"
           
           
