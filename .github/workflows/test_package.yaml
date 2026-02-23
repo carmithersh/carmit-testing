@@ -6,23 +6,18 @@ on:
       package_repo:
         description: 'JFrog repository key (e.g., docker-local, pypi-local)'
         required: true
-        default: 'pac-ai-generator-docker-prod'
       package_name:
         description: 'Package name'
         required: true
-        default: 'github-jfrog-testing'
       package_version:
         description: 'Package version or tag'
         required: true
-        default: '5'
       package_type:
         description: 'Package type (e.g., pypi, docker, npm)'
         required: true
-        default: 'docker'
       project:
         description: 'JFrog project key'
         required: false
-        default: 'pac-ai-generator'
 
 permissions:
   id-token: write
@@ -41,7 +36,7 @@ jobs:
         env:
           JF_URL: https://${{ vars.JF_URL }}/
         with:
-          oidc-provider-name: github-carmit-project-1
+          oidc-provider-name: setup-jfrog-cli
 
       - name: Setup OPA
         uses: open-policy-agent/setup-opa@v2
@@ -57,17 +52,13 @@ jobs:
           PROJECT: ${{ inputs.project }}
         run: |
           QUERY=$(echo '{"query": "query get_package { storedPackages { getPackage(name: \"NAME_PLACEHOLDER\", type: \"TYPE_PLACEHOLDER\", projectKey: \"PROJECT_PLACEHOLDER\") { name type versionsConnection(first:1, where: { version: \"VERSION_PLACEHOLDER\" }) { edges { node { version locationsConnection(first: 1, where: { repositoryKey: \"REPO_PLACEHOLDER\" }) { edges { node { repositoryKey artifactsConnection(first:1, where:{ isLeadArtifact:true }) { edges { node { name sha256 } } } } } } } } } } } }","variables":{}}}')
-          
+
           QUERY=$(echo "$QUERY" | sed "s/NAME_PLACEHOLDER/${PACKAGE_NAME}/g" | sed "s/TYPE_PLACEHOLDER/${PACKAGE_TYPE}/g" | sed "s/PROJECT_PLACEHOLDER/${PROJECT}/g" | sed "s/VERSION_PLACEHOLDER/${PACKAGE_VERSION}/g" | sed "s/REPO_PLACEHOLDER/${PACKAGE_REPO}/g")
 
           RESPONSE=$(curl -s -XPOST \
             -H "Authorization: Bearer ${{ steps.setup-jfrog-cli.outputs.oidc-token }}" \
             -H "Content-Type: application/json" \
             "https://${{ vars.JF_URL }}/onemodel/api/v1/graphql" --data "$QUERY")
-          
-          echo "--------------------------------"
-          echo "Query: $QUERY"
-
 
           PACKAGE_SHA256=$(echo "$RESPONSE" | jq -r '.data.storedPackages.getPackage.versionsConnection.edges[0].node.locationsConnection.edges[0].node.artifactsConnection.edges[0].node.sha256')
 
@@ -91,37 +82,25 @@ jobs:
           )
 
           QUERY=$(echo "$QUERY" | sed "s/REPO_PLACEHOLDER/${PACKAGE_REPO}/g" | sed "s/SHA256_PLACEHOLDER/${PACKAGE_SHA256}/g")
-          echo "--------------------------------"
-          echo "Query: $QUERY"
-          
+
           RESPONSE=$(curl -s -X POST \
             -H "Authorization: Bearer ${{ steps.setup-jfrog-cli.outputs.oidc-token }}" \
             -H "Content-Type: application/json" \
             "https://${{ vars.JF_URL }}/onemodel/api/v1/graphql" \
             -d "$QUERY")
-            
-          echo "--------------------------------"
-          echo "Response: $RESPONSE"
-          echo "--------------------------------"
-          
+
           echo "$RESPONSE" > evidence_response.json
-          
-          echo "--------------------------------"
-          echo "Evidence response received:"           
-          echo "--------------------------------"
-          
-          
+
+          echo "Evidence response received"
+
       - name: Prepare OPA Input
         run: |
-          PREDICATE_TYPES='["https://slsa.dev/provenance/v1","https://sonarsource.com/evidence/sonarqube/v1"]'
-          REQUIRED_GIT_ORG_PREFIX="git+https://github.com/carmithersh"
+          PREDICATE_TYPES='["https://jfrog.com/evidence/test-results/v1","https://sonarsource.com/evidence/sonarqube/v1"]'
 
-          jq --argjson pts "${PREDICATE_TYPES}" \
-             --arg gitPrefix "${REQUIRED_GIT_ORG_PREFIX}" '{
+          jq --argjson pts "${PREDICATE_TYPES}" '{
             evidence: .data.evidence.searchEvidence.edges,
             params: {
-              predicateTypes: $pts,
-              requiredGitOrgPrefix: $gitPrefix
+              predicateTypes: $pts
             }
           }' evidence_response.json > input.json
 
