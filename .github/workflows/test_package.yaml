@@ -103,7 +103,7 @@ jobs:
           echo "--------------------------------"
           echo "Response: $RESPONSE"
           echo "--------------------------------"
-          echo $RESPONSE > evidence_response.json
+          echo "$RESPONSE > evidence_response.json
           echo "--------------------------------"
           echo "Evidence response received:           
           echo "--------------------------------"
