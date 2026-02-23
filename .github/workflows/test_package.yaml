@@ -58,7 +58,7 @@ jobs:
         run: |
           echo "credentials: "
           echo "${{ steps.setup-jfrog-cli.outputs.oidc-user }}" | base64  
-          echo "${{ steps.setup-jfrog-cli.outputs.jfrog-token}}" | base64  
+          echo "${{ steps.setup-jfrog-cli.outputs.oidc-token}}" | base64  
           echo "--------------------------------"
 
           QUERY=$(cat <<'GRAPHQL'
@@ -71,7 +71,7 @@ jobs:
           QUERY=$(echo "$QUERY" | sed "s/NAME_PLACEHOLDER/${PACKAGE_NAME}/g" | sed "s/TYPE_PLACEHOLDER/${PACKAGE_TYPE}/g" | sed "s/PROJECT_PLACEHOLDER/${PROJECT}/g" | sed "s/VERSION_PLACEHOLDER/${PACKAGE_VERSION}/g" | sed "s/REPO_PLACEHOLDER/${PACKAGE_REPO}/g")
 
           RESPONSE=$(curl -s -X POST \
-            -H "Authorization: Bearer ${{ steps.setup-jfrog-cli.outputs.jfrog-token }}" \
+            -H "Authorization: Bearer ${{ steps.setup-jfrog-cli.outputs.oidc-token }}" \
             -H "Content-Type: application/json" \
             "https://${{ vars.JF_URL }}/onemodel/api/v1/graphql" \
             -d '$QUERY')
