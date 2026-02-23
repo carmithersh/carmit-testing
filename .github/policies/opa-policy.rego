@@ -14,53 +14,46 @@ missing := [pt |
 	not pt in verified_types
 ]
 
-# SonarQube content checks
+slsa_type := "https://slsa.dev/provenance/v1"
 
-sonar_predicate_type := "https://sonarsource.com/evidence/sonarqube/v1"
-
-default sonar_gate_ok := false
-
-sonar_gate_ok if {
+slsa_verified_nodes := [node |
 	some node in evidence_nodes
-	node.predicateType == sonar_predicate_type
+	node.predicateType == slsa_type
 	node.verified == true
-	some gate in node.predicate.gates
-	gate.status == "OK"
+]
+
+default slsa_github_runner_ok := false
+
+slsa_github_runner_ok if {
+	some node in slsa_verified_nodes
+	contains(node.predicate.runDetails.builder.id, "github.com")
 }
 
-default sonar_new_coverage_ok := false
+default slsa_org_ok := false
 
-sonar_new_coverage_ok if {
-	some node in evidence_nodes
-	node.predicateType == sonar_predicate_type
-	node.verified == true
-	some gate in node.predicate.gates
-	some condition in gate.conditions
-	condition.metricKey == "new_maintainability_rating"
-	condition.status == "OK"
+slsa_org_ok if {
+	some node in slsa_verified_nodes
+	some dep in node.predicate.buildDefinition.resolvedDependencies
+	startswith(dep.uri, input.params.requiredGitOrgPrefix)
 }
 
-content_errors contains "SonarQube quality gate status is not OK" if {
-	sonar_predicate_type in verified_types
-	not sonar_gate_ok
-}
-
-content_errors contains "SonarQube new_coverage condition is not OK or missing" if {
-	sonar_predicate_type in verified_types
-	not sonar_new_coverage_ok
-}
+slsa_content_failures := array.concat(
+	[msg | not slsa_github_runner_ok; msg := "SLSA builder is not a GitHub runner"],
+	[msg | not slsa_org_ok; msg := concat("", ["source repo not under required GitHub org: ", input.params.requiredGitOrgPrefix])],
+)
 
 default result := {"allow": false, "missing": [], "message": "no evidence found"}
 
 result := {"allow": true, "missing": [], "message": "all required evidence found and verified"} if {
 	count(missing) == 0
-	count(content_errors) == 0
+	count(slsa_content_failures) == 0
 }
 
-result := {"allow": false, "missing": missing, "message": concat("; ", errors)} if {
-	errors := array.concat(
-		[concat("", ["missing verified evidence for: ", concat(", ", missing)]) | count(missing) > 0],
-		[e | some e in content_errors],
-	)
-	count(errors) > 0
+result := {"allow": false, "missing": missing, "message": concat("", ["missing verified evidence for: ", concat(", ", missing)])} if {
+	count(missing) > 0
+}
+
+result := {"allow": false, "missing": [], "message": concat("; ", slsa_content_failures)} if {
+	count(missing) == 0
+	count(slsa_content_failures) > 0
 }
