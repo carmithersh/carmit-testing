@@ -90,17 +90,19 @@ jobs:
             -d "$QUERY")
 
           echo "$RESPONSE" > evidence_response.json
-
           echo "Evidence response received"
 
       - name: Prepare OPA Input
         run: |
-          PREDICATE_TYPES='["https://jfrog.com/evidence/test-results/v1","https://sonarsource.com/evidence/sonarqube/v1"]'
+          PREDICATE_TYPES='["https://slsa.dev/provenance/v1","https://jfrog.com/evidence/test-results/v1"]'
+          REQUIRED_GIT_ORG_PREFIX="git+https://github.com/carmithersh"
 
-          jq --argjson pts "${PREDICATE_TYPES}" '{
+          jq --argjson pts "${PREDICATE_TYPES}" \
+             --arg gitPrefix "${REQUIRED_GIT_ORG_PREFIX}" '{
             evidence: .data.evidence.searchEvidence.edges,
             params: {
-              predicateTypes: $pts
+              predicateTypes: $pts,
+              requiredGitOrgPrefix: $gitPrefix
             }
           }' evidence_response.json > input.json
 
