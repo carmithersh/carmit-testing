@@ -60,11 +60,10 @@ jobs:
           
           QUERY2=$(echo "$QUERY" | sed "s/NAME_PLACEHOLDER/${PACKAGE_NAME}/g" | sed "s/TYPE_PLACEHOLDER/${PACKAGE_TYPE}/g" | sed "s/PROJECT_PLACEHOLDER/${PROJECT}/g" | sed "s/VERSION_PLACEHOLDER/${PACKAGE_VERSION}/g" | sed "s/REPO_PLACEHOLDER/${PACKAGE_REPO}/g")
 
-          RESPONSE=$(curl -vvv -s -XPOST \
+          RESPONSE=$(curl -s -XPOST \
             -H "Authorization: Bearer ${{ steps.setup-jfrog-cli.outputs.oidc-token }}" \
             -H "Content-Type: application/json" \
-            "https://${{ vars.JF_URL }}/onemodel/api/v1/graphql" \
-            --data '$QUERY2')
+            "https://${{ vars.JF_URL }}/onemodel/api/v1/graphql" --data "$QUERY2")
           
           echo "--------------------------------"
           echo "Query: $QUERY2"
