@@ -95,13 +95,17 @@ jobs:
           QUERY=$(echo "$QUERY" | sed "s/REPO_PLACEHOLDER/${PACKAGE_REPO}/g" | sed "s/SHA256_PLACEHOLDER/${PACKAGE_SHA256}/g")
 
           curl -s -X POST \
-            -H "Authorization: Bearer ${{ steps.setup-jfrog-cli.outputs.jfrog-token }}" \
+            -H "Authorization: Bearer ${{ steps.setup-jfrog-cli.outputs.oidc-token }}" \
             -H "Content-Type: application/json" \
             "https://${{ vars.JF_URL }}/onemodel/api/v1/graphql" \
             -d "$QUERY" > evidence_response.json
 
-          echo "Evidence response received"
-
+          echo "--------------------------------"
+          echo "Evidence response received: 
+          cat evidence_response.json
+          echo "--------------------------------"
+          
+          
       - name: Prepare OPA Input
         run: |
           PREDICATE_TYPES='["https://slsa.dev/provenance/v1","https://sonarsource.com/evidence/sonarqube/v1"]'
