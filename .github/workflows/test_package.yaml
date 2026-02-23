@@ -36,7 +36,7 @@ jobs:
         env:
           JF_URL: https://${{ vars.JF_URL }}/
         with:
-          oidc-provider-name: setup-jfrog-cli
+          oidc-provider-name: github-carmit-project-1
 
       - name: Setup OPA
         uses: open-policy-agent/setup-opa@v2
