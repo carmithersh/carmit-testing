@@ -16,44 +16,56 @@ missing := [pt |
 
 slsa_type := "https://slsa.dev/provenance/v1"
 
-slsa_verified_nodes := [node |
+slsa_node := node if {
 	some node in evidence_nodes
 	node.predicateType == slsa_type
 	node.verified == true
-]
-
-default slsa_github_runner_ok := false
-
-slsa_github_runner_ok if {
-	some node in slsa_verified_nodes
-	contains(node.predicate.runDetails.builder.id, "github.com")
 }
 
-default slsa_org_ok := false
+slsa_runner_ok if {
+	slsa_node.predicate.buildDefinition.internalParameters.github.runner_environment == input.params.requiredRunnerEnv
+}
 
 slsa_org_ok if {
-	some node in slsa_verified_nodes
-	some dep in node.predicate.buildDefinition.resolvedDependencies
-	startswith(dep.uri, input.params.requiredGitOrgPrefix)
+	startswith(slsa_node.predicate.buildDefinition.externalParameters.workflow.repository, input.params.requiredOrgPrefix)
 }
 
-slsa_content_failures := array.concat(
-	[msg | not slsa_github_runner_ok; msg := "SLSA builder is not a GitHub runner"],
-	[msg | not slsa_org_ok; msg := concat("", ["source repo not under required GitHub org: ", input.params.requiredGitOrgPrefix])],
-)
+slsa_ref_ok if {
+	slsa_node.predicate.buildDefinition.externalParameters.workflow.ref == input.params.requiredRef
+}
 
-default result := {"allow": false, "missing": [], "message": "no evidence found"}
+slsa_errors := [msg |
+	slsa_type in verified_types
+	some msg in [m |
+		not slsa_runner_ok
+		m := sprintf("runner_environment is not '%s'", [input.params.requiredRunnerEnv])
+	]
+] | [msg |
+	slsa_type in verified_types
+	some msg in [m |
+		not slsa_org_ok
+		m := sprintf("workflow repository does not start with '%s'", [input.params.requiredOrgPrefix])
+	]
+] | [msg |
+	slsa_type in verified_types
+	some msg in [m |
+		not slsa_ref_ok
+		m := sprintf("workflow ref is not '%s'", [input.params.requiredRef])
+	]
+]
 
-result := {"allow": true, "missing": [], "message": "all required evidence found and verified"} if {
+default result := {"allow": false, "missing": [], "slsa_errors": [], "message": "no evidence found"}
+
+result := {"allow": true, "missing": [], "slsa_errors": [], "message": "all required evidence found, verified, and compliant"} if {
 	count(missing) == 0
-	count(slsa_content_failures) == 0
+	count(slsa_errors) == 0
 }
 
-result := {"allow": false, "missing": missing, "message": concat("", ["missing verified evidence for: ", concat(", ", missing)])} if {
+result := {"allow": false, "missing": missing, "slsa_errors": [], "message": concat("", ["missing verified evidence for: ", concat(", ", missing)])} if {
 	count(missing) > 0
 }
 
-result := {"allow": false, "missing": [], "message": concat("; ", slsa_content_failures)} if {
+result := {"allow": false, "missing": [], "slsa_errors": slsa_errors, "message": concat("", ["SLSA compliance failures: ", concat("; ", slsa_errors)])} if {
 	count(missing) == 0
-	count(slsa_content_failures) > 0
+	count(slsa_errors) > 0
 }
