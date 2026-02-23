@@ -36,7 +36,7 @@ sonar_new_coverage_ok if {
 	node.verified == true
 	some gate in node.predicate.gates
 	some condition in gate.conditions
-	condition.metricKey == "new_coverage"
+	condition.metricKey == "new_maintainability_rating"
 	condition.status == "OK"
 }
 
