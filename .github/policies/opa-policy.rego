@@ -34,25 +34,23 @@ slsa_ref_ok if {
 	slsa_node.predicate.buildDefinition.externalParameters.workflow.ref == input.params.requiredRef
 }
 
-slsa_errors := [msg |
+slsa_errors contains msg if {
 	slsa_type in verified_types
-	some msg in [m |
-		not slsa_runner_ok
-		m := sprintf("runner_environment is not '%s'", [input.params.requiredRunnerEnv])
-	]
-] | [msg |
+	not slsa_runner_ok
+	msg := sprintf("runner_environment is not '%s'", [input.params.requiredRunnerEnv])
+}
+
+slsa_errors contains msg if {
 	slsa_type in verified_types
-	some msg in [m |
-		not slsa_org_ok
-		m := sprintf("workflow repository does not start with '%s'", [input.params.requiredOrgPrefix])
-	]
-] | [msg |
+	not slsa_org_ok
+	msg := sprintf("workflow repository does not start with '%s'", [input.params.requiredOrgPrefix])
+}
+
+slsa_errors contains msg if {
 	slsa_type in verified_types
-	some msg in [m |
-		not slsa_ref_ok
-		m := sprintf("workflow ref is not '%s'", [input.params.requiredRef])
-	]
-]
+	not slsa_ref_ok
+	msg := sprintf("workflow ref is not '%s'", [input.params.requiredRef])
+}
 
 default result := {"allow": false, "missing": [], "slsa_errors": [], "message": "no evidence found"}
 
