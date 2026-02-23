@@ -51,7 +51,7 @@ jobs:
           PACKAGE_TYPE: ${{ inputs.package_type }}
           PROJECT: ${{ inputs.project }}
         run: |
-          QUERY=$(echo '{"query": "query get_package { storedPackages { getPackage(name: \"NAME_PLACEHOLDER\", type: \"TYPE_PLACEHOLDER\", projectKey: \"PROJECT_PLACEHOLDER\") { name type versionsConnection(first:1, where: { version: \"VERSION_PLACEHOLDER\" }) { edges { node { version locationsConnection(first: 1, where: { repositoryKey: \"REPO_PLACEHOLDER\" }) { edges { node { repositoryKey artifactsConnection(first:1, where:{ isLeadArtifact:true }) { edges { node { name sha256 } } } } } } } } } } } }","variables":{}}}')
+          QUERY=$(echo '{"query": "query get_package { storedPackages { getPackage(name: \"NAME_PLACEHOLDER\", type: \"TYPE_PLACEHOLDER\", projectKey: \"PROJECT_PLACEHOLDER\") { name type versionsConnection(first:1, where: { version: \"VERSION_PLACEHOLDER\" }) { edges { node { version locationsConnection(first: 1, where: { repositoryKey: \"REPO_PLACEHOLDER\" }) { edges { node { repositoryKey artifactsConnection(first:1, where:{ isLeadArtifact:true }) { edges { node { name sha256 } } } } } } } } } } } }","variables":{}}')
 
           QUERY=$(echo "$QUERY" | sed "s/NAME_PLACEHOLDER/${PACKAGE_NAME}/g" | sed "s/TYPE_PLACEHOLDER/${PACKAGE_TYPE}/g" | sed "s/PROJECT_PLACEHOLDER/${PROJECT}/g" | sed "s/VERSION_PLACEHOLDER/${PACKAGE_VERSION}/g" | sed "s/REPO_PLACEHOLDER/${PACKAGE_REPO}/g")
 
@@ -90,19 +90,26 @@ jobs:
             -d "$QUERY")
 
           echo "$RESPONSE" > evidence_response.json
+
           echo "Evidence response received"
 
       - name: Prepare OPA Input
         run: |
           PREDICATE_TYPES='["https://slsa.dev/provenance/v1","https://jfrog.com/evidence/test-results/v1"]'
-          REQUIRED_GIT_ORG_PREFIX="git+https://github.com/carmithersh"
+          REQUIRED_RUNNER_ENV="github-hosted"
+          REQUIRED_ORG_PREFIX="https://github.com/carmithersh"
+          REQUIRED_REF="refs/heads/main"
 
           jq --argjson pts "${PREDICATE_TYPES}" \
-             --arg gitPrefix "${REQUIRED_GIT_ORG_PREFIX}" '{
+             --arg runnerEnv "${REQUIRED_RUNNER_ENV}" \
+             --arg orgPrefix "${REQUIRED_ORG_PREFIX}" \
+             --arg ref "${REQUIRED_REF}" '{
             evidence: .data.evidence.searchEvidence.edges,
             params: {
               predicateTypes: $pts,
-              requiredGitOrgPrefix: $gitPrefix
+              requiredRunnerEnv: $runnerEnv,
+              requiredOrgPrefix: $orgPrefix,
+              requiredRef: $ref
             }
           }' evidence_response.json > input.json
 
@@ -113,12 +120,14 @@ jobs:
           ALLOW=$(echo "$RESULT" | jq -r '.result[0].expressions[0].value.allow')
           MESSAGE=$(echo "$RESULT" | jq -r '.result[0].expressions[0].value.message // "No message"')
           MISSING=$(echo "$RESULT" | jq -r '.result[0].expressions[0].value.missing // []')
+          SLSA_ERRORS=$(echo "$RESULT" | jq -r '.result[0].expressions[0].value.slsa_errors // []')
 
           echo "OPA Result: allow=$ALLOW, message=$MESSAGE"
 
           if [ "$ALLOW" != "true" ]; then
             echo "::error::Evidence policy check failed: $MESSAGE"
             echo "Missing evidence types: $MISSING"
+            echo "SLSA errors: $SLSA_ERRORS"
             exit 1
           fi
 
