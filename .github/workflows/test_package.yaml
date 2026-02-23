@@ -56,7 +56,7 @@ jobs:
           PACKAGE_TYPE: ${{ inputs.package_type }}
           PROJECT: ${{ inputs.project }}
         run: |
-          QUERY=echo '{"query": "query get_package { storedPackages { getPackage(name: \"NAME_PLACEHOLDER\", type: \"TYPE_PLACEHOLDER\", projectKey: \"PROJECT_PLACEHOLDER\") { name type versionsConnection(first:1, where: { version: \"VERSION_PLACEHOLDER\" }) { edges { node { version locationsConnection(first: 1, where: { repositoryKey: \"REPO_PLACEHOLDER\" }) { edges { node { repositoryKey artifactsConnection(first:1, where:{ isLeadArtifact:true }) { edges { node { name sha256 } } } } } } } } } } } }","variables":{}}}'
+          QUERY=$(echo '{"query": "query get_package { storedPackages { getPackage(name: \"NAME_PLACEHOLDER\", type: \"TYPE_PLACEHOLDER\", projectKey: \"PROJECT_PLACEHOLDER\") { name type versionsConnection(first:1, where: { version: \"VERSION_PLACEHOLDER\" }) { edges { node { version locationsConnection(first: 1, where: { repositoryKey: \"REPO_PLACEHOLDER\" }) { edges { node { repositoryKey artifactsConnection(first:1, where:{ isLeadArtifact:true }) { edges { node { name sha256 } } } } } } } } } } } }","variables":{}}}')
           
           QUERY2=$(echo "$QUERY" | sed "s/NAME_PLACEHOLDER/${PACKAGE_NAME}/g" | sed "s/TYPE_PLACEHOLDER/${PACKAGE_TYPE}/g" | sed "s/PROJECT_PLACEHOLDER/${PROJECT}/g" | sed "s/VERSION_PLACEHOLDER/${PACKAGE_VERSION}/g" | sed "s/REPO_PLACEHOLDER/${PACKAGE_REPO}/g")
 
