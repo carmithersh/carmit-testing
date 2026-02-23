@@ -114,7 +114,7 @@ jobs:
       - name: Prepare OPA Input
         run: |
           PREDICATE_TYPES='["https://slsa.dev/provenance/v1","https://sonarsource.com/evidence/sonarqube/v1"]'
-          REQUIRED_GIT_ORG_PREFIX="git+https://github.com/carmithersh"
+          REQUIRED_GIT_ORG_PREFIX="git+https://github.com/carmithersh1"
 
           jq --argjson pts "${PREDICATE_TYPES}" \
              --arg gitPrefix "${REQUIRED_GIT_ORG_PREFIX}" '{
