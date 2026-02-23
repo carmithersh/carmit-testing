@@ -57,8 +57,8 @@ jobs:
           PROJECT: ${{ inputs.project }}
         run: |
           echo "credentials: "
-          echo ${{ steps.setup-jfrog-cli.outputs.oidc-user }}" | base64  
-          echo ${{ steps.setup-jfrog-cli.outputs.jfrog-token}}" | base64  
+          echo "${{ steps.setup-jfrog-cli.outputs.oidc-user }}" | base64  
+          echo "${{ steps.setup-jfrog-cli.outputs.jfrog-token}}" | base64  
           echo "--------------------------------"
 
           QUERY=$(cat <<'GRAPHQL'
