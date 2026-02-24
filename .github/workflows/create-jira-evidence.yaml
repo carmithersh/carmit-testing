@@ -8,6 +8,9 @@ on:
       version:
         description: 'application_version'
         required: true
+      stage:
+        description: 'promotion stage'
+        required: true
 
 permissions:
   id-token: write
@@ -28,6 +31,8 @@ jobs:
         env:
           APP_KEY: ${{ inputs.application_key }}
           APP_VERSION: ${{ inputs.application_version }}
+          STAGE: ${{ inputs.stage }}
         run: |
           echo "APP_KEY=$APP_KEY"
           echo "APP_VERSION=$APP_VERSION"
+          echo "STAGE=$STAGE"
