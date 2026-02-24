@@ -5,7 +5,7 @@ on:
       application_key:
         description: 'application key'
         required: true
-      version:
+      application_version:
         description: 'application_version'
         required: true
       stage:
