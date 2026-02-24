@@ -1,0 +1,33 @@
+name: create_jira_evidence
+on:
+  workflow_dispatch:
+    inputs:
+      application_key:
+        description: 'application key'
+        required: true
+      version:
+        description: 'application_version'
+        required: true
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  create-evidence:
+    runs-on: ubuntu-latest
+    steps:  
+      - name: Setup JFrog CLI
+        id: setup-jfrog-cli
+        uses: jfrog/setup-jfrog-cli@v4
+        env:
+          JF_URL: https://${{ vars.JF_URL }}/
+        with:
+          oidc-provider-name: github-carmit-project-1    
+      - name: Get version slsa evidence
+        env:
+          APP_KEY: ${{ inputs.application_key }}
+          APP_VERSION: ${{ inputs.application_version }}
+        run: |
+          echo "APP_KEY=$APP_KEY"
+          echo "APP_VERSION=$APP_VERSION"
