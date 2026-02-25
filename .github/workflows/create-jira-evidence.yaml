@@ -373,7 +373,7 @@ jobs:
         env:
           APP_KEY: ${{ inputs.application_key }}
           APP_VERSION: ${{ inputs.application_version }}
-          EVIDENCE_SIGNING_KEY: ${{ vars.EVIDENCE_SIGNING_KEY }}
+          EVIDENCE_SIGNING_KEY: ${{ secrets.EVIDENCE_SIGNING_KEY }}
         run: |
           jf evd create \
             --predicate-type "https://jfrog.com/evidence/jira-transitions/v1" \
