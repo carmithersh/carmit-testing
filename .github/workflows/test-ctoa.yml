@@ -13,11 +13,6 @@ jobs:
         env:
           DOCKER_REPO: 'pac-ai-generator-docker-local'
           IMAGE_NAME: 'skills-jfrog-testing:${{ github.run_number }}'  
-          
-        outputs:
-          digest: ${{ steps.build.outputs.digest }}                          
-          rt_host: ${{ vars.CTOA_JF_URL }}
-          image: ${{ env.DOCKER_REPO }}/${{ env.IMAGE_NAME }}
         steps:
             - name: Checkout the repository    
               uses: actions/checkout@v4
@@ -89,17 +84,8 @@ jobs:
                 #jf build-scan  --format sarif --fail=false 
           
             - name: Attest Build Provenance
-              if: false
               uses: actions/attest-build-provenance@v3
               with:
                 subject-name: oci://${{ vars.CTOA_JF_URL }}/${{ env.DOCKER_REPO }}/${{ env.IMAGE_NAME }}
                 subject-digest: ${{ steps.build.outputs.digest }}
-      
-    call-reusable:
-        needs: build-publish 
-        uses: carmithersh/carmit-testing/.github/workflows/create_L3_attestation.yml@main 
-        with:
-            subject-name: oci://${{ needs.build.outputs.rt_host }}/${{ needs.build.outputs.image }}
-            subject-digest: ${{ needs.build.outputs.digest }}
-            oidc-provider: github-carmit-project-1
-            jfrog-platform-host: ${{ needs.build.outputs.rt_host }}
+
