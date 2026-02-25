@@ -1,5 +1,7 @@
 #!/usr/bin/python
 # adding a faewture in CTOA-1010, commit 1 
+# adding a faewture in CTOA-1010, commit 2
+
 # Function definition is here
 def printme( str ):
     # This prints a passed string into this function
