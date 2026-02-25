@@ -79,7 +79,7 @@ jobs:
               }
             }
           }"
-          echo "QUERY=$QUERY"
+
           BODY=$(jq -n --arg q "$QUERY" '{query: $q}')
 
           curl -sf -X POST \
@@ -87,16 +87,21 @@ jobs:
             -H "Content-Type: application/json" \
             -H "Authorization: Bearer ${OIDC_TOKEN}" \
             -d "$BODY" -o current_version_response.json
-          cat current_version_response.json
-          
+
+          TOTAL_RELEASABLES=$(jq '[.data.applications.getApplicationVersion.releasables.releasablesConnection.edges[].node] | length' current_version_response.json)
+
           jq '[
             .data.applications.getApplicationVersion.releasables.releasablesConnection
-            .edges[].node.artifacts[].evidenceSubject.evidenceConnection.edges[].node
-            .predicate.buildDefinition.resolvedDependencies[] |
+            .edges[].node.artifacts[]?.evidenceSubject.evidenceConnection.edges[]?.node
+            .predicate.buildDefinition.resolvedDependencies[]? |
             { gitCommit: .digest.gitCommit, uri: .uri }
           ] | unique_by(.uri)' current_version_response.json > current_commit_info.json
 
-          echo "Current version commit info:"
+          WITH_EVIDENCE=$(jq 'length' current_commit_info.json)
+          echo "Releasables: ${TOTAL_RELEASABLES} total, ${WITH_EVIDENCE} with SLSA provenance evidence"
+          if [ "$WITH_EVIDENCE" -eq 0 ]; then
+            echo "::warning::No releasables have SLSA provenance evidence — commit range will be empty"
+          fi
           jq . current_commit_info.json
 
       - name: Get previous application version
@@ -197,8 +202,8 @@ jobs:
 
           jq '[
             .data.applications.getApplicationVersion.releasables.releasablesConnection
-            .edges[].node.artifacts[].evidenceSubject.evidenceConnection.edges[].node
-            .predicate.buildDefinition.resolvedDependencies[] |
+            .edges[].node.artifacts[]?.evidenceSubject.evidenceConnection.edges[]?.node
+            .predicate.buildDefinition.resolvedDependencies[]? |
             { gitCommit: .digest.gitCommit, uri: .uri }
           ] | unique_by(.uri)' prev_version_response.json > prev_commit_info.json
 
@@ -218,6 +223,9 @@ jobs:
           ALL_JIRA_KEYS=""
 
           COUNT=$(echo "$CURRENT_COMMITS" | jq 'length')
+          if [ "$COUNT" -eq 0 ]; then
+            echo "::warning::No SLSA provenance evidence found on any releasable — skipping commit diff extraction"
+          fi
           for i in $(seq 0 $((COUNT - 1))); do
             CURRENT_SHA=$(echo "$CURRENT_COMMITS" | jq -r ".[$i].gitCommit")
             REPO_URI=$(echo "$CURRENT_COMMITS" | jq -r ".[$i].uri")
