@@ -92,7 +92,8 @@ jobs:
 
           jq '[
             .data.applications.getApplicationVersion.releasables.releasablesConnection
-            .edges[].node.artifacts[]?.evidenceSubject.evidenceConnection.edges[]?.node
+            .edges[].node.artifacts[]?.evidenceSubject.evidenceConnection
+            .edges // [] | .[]?.node
             .predicate.buildDefinition.resolvedDependencies[]? |
             { gitCommit: .digest.gitCommit, uri: .uri }
           ] | unique_by(.uri)' current_version_response.json > current_commit_info.json
@@ -202,7 +203,8 @@ jobs:
 
           jq '[
             .data.applications.getApplicationVersion.releasables.releasablesConnection
-            .edges[].node.artifacts[]?.evidenceSubject.evidenceConnection.edges[]?.node
+            .edges[].node.artifacts[]?.evidenceSubject.evidenceConnection
+            .edges // [] | .[]?.node
             .predicate.buildDefinition.resolvedDependencies[]? |
             { gitCommit: .digest.gitCommit, uri: .uri }
           ] | unique_by(.uri)' prev_version_response.json > prev_commit_info.json
@@ -210,8 +212,8 @@ jobs:
           echo "Previous version commit info:"
           jq . prev_commit_info.json
 
-      - name: Extract Jira issue keys from commit diff
-        id: extract-jira-keys
+      - name: Perform GIT diff
+        id: git-diff
         env:
           GH_TOKEN: ${{ github.token }}
           IS_FIRST: ${{ steps.previous-version.outputs.is_first_version }}
@@ -220,12 +222,16 @@ jobs:
           PREV_COMMITS=$(cat prev_commit_info.json)
 
           COMMIT_RANGES="[]"
-          ALL_JIRA_KEYS=""
+          ALL_MESSAGES=""
 
           COUNT=$(echo "$CURRENT_COMMITS" | jq 'length')
           if [ "$COUNT" -eq 0 ]; then
-            echo "::warning::No SLSA provenance evidence found on any releasable — skipping commit diff extraction"
+            echo "::warning::No SLSA provenance evidence found on any releasable — skipping commit diff"
+            echo "$COMMIT_RANGES" | jq . > commit_ranges.json
+            echo "" > all_commit_messages.txt
+            exit 0
           fi
+
           for i in $(seq 0 $((COUNT - 1))); do
             CURRENT_SHA=$(echo "$CURRENT_COMMITS" | jq -r ".[$i].gitCommit")
             REPO_URI=$(echo "$CURRENT_COMMITS" | jq -r ".[$i].uri")
@@ -254,8 +260,7 @@ jobs:
               MESSAGES=$(echo "$RESPONSE" | jq -r '.commits[].commit.message')
             fi
 
-            KEYS=$(echo "$MESSAGES" | grep -oE '(PROJ|TEAM)-[0-9]+' || true)
-            ALL_JIRA_KEYS="${ALL_JIRA_KEYS} ${KEYS}"
+            ALL_MESSAGES="${ALL_MESSAGES}${MESSAGES}"$'\n'
 
             COMMIT_RANGES=$(echo "$COMMIT_RANGES" | jq \
               --arg repo "$REPO_URI" \
@@ -265,8 +270,19 @@ jobs:
           done
 
           echo "$COMMIT_RANGES" | jq . > commit_ranges.json
+          echo "$ALL_MESSAGES" > all_commit_messages.txt
 
-          UNIQUE_KEYS=$(echo "$ALL_JIRA_KEYS" | tr ' ' '\n' | sort -u | grep -v '^$' | tr '\n' ',' | sed 's/,$//')
+          echo "Commit ranges:"
+          jq . commit_ranges.json
+
+      - name: Extract Jira issue keys from commit diff
+        id: extract-jira-keys
+        run: |
+          ALL_MESSAGES=$(cat all_commit_messages.txt)
+
+          KEYS=$(echo "$ALL_MESSAGES" | grep -oE '(PROJ|TEAM)-[0-9]+' || true)
+          UNIQUE_KEYS=$(echo "$KEYS" | sort -u | grep -v '^$' | tr '\n' ',' | sed 's/,$//')
+
           echo "jira_keys=${UNIQUE_KEYS}" >> "$GITHUB_OUTPUT"
           echo "Found Jira keys: ${UNIQUE_KEYS}"
 
