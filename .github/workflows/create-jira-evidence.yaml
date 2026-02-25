@@ -302,8 +302,8 @@ jobs:
           JIRA_ISSUES="[]"
 
           KEYS=$(cat jira_keys.txt)
+          IFS=';' read -ra KEYS <<< "${KEYS}"
           for KEY in "${KEYS[@]}"; do
-            KEY=$(echo "$KEY" | xargs)
             [ -z "$KEY" ] && continue
             echo "KEY=$KEY"
 
