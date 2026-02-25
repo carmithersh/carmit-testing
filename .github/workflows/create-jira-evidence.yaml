@@ -257,12 +257,10 @@ jobs:
               RESPONSE=$(curl -sf \
                 -H "Authorization: Bearer ${GH_TOKEN}" \
                 "https://api.github.com/repos/${ORG}/${REPO}/compare/${PREV_SHA}...${CURRENT_SHA}")
-              MESSAGES=$(echo "$RESPONSE" | jq -r '.commits[].commit.message')
-              echo "PREV_SHA=$PREV_SHA"
-              echo "CURRENT_SHA=$CURRENT_SHA"
-              echo "MESSAGES=$MESSAGES"
-              echo "RESPONSE=$RESPONSE"
-
+              MESSAGES=$(echo "$RESPONSE" | jq -r '
+                [.base_commit.commit.message // empty,
+                 .merge_base_commit.commit.message // empty,
+                 .commits[].commit.message] | unique | .[]')
             fi
 
             ALL_MESSAGES="${ALL_MESSAGES}${MESSAGES}"$'\n'
@@ -279,8 +277,6 @@ jobs:
 
           echo "Commit ranges:"
           jq . commit_ranges.json
-
-          cat all_commit_messages.txt
 
       - name: Extract Jira issue keys from commit diff
         id: extract-jira-keys
