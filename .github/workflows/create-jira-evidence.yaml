@@ -79,7 +79,7 @@ jobs:
               }
             }
           }"
-
+          echo "QUERY=$QUERY"
           BODY=$(jq -n --arg q "$QUERY" '{query: $q}')
 
           curl -sf -X POST \
@@ -87,7 +87,8 @@ jobs:
             -H "Content-Type: application/json" \
             -H "Authorization: Bearer ${OIDC_TOKEN}" \
             -d "$BODY" -o current_version_response.json
-
+          cat current_version_response.json
+          
           jq '[
             .data.applications.getApplicationVersion.releasables.releasablesConnection
             .edges[].node.artifacts[].evidenceSubject.evidenceConnection.edges[].node
