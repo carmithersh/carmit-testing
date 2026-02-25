@@ -298,7 +298,7 @@ jobs:
           JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
           
         run: |
-          AUTH=$(printf '%s' "${JIRA_USER_EMAIL}:${JIRA_API_TOKEN}" | base64 -w 0)
+          AUTH=$(echo -n "${JIRA_USER_EMAIL}:${JIRA_API_TOKEN}" | base64 -w 0)
           JIRA_ISSUES="[]"
 
           KEYS=$(cat jira_keys.txt)
@@ -308,7 +308,7 @@ jobs:
             echo "KEY=$KEY"
             echo "JIRA_BASE_URL=$JIRA_BASE_URL"
             echo "AUTH=$AUTH"
-            
+
             RESPONSE=$(curl -sf \
               -H "Authorization: Basic ${AUTH}" \
               -H "Content-Type: application/json" \
