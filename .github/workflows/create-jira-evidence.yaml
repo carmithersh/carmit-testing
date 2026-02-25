@@ -312,6 +312,8 @@ jobs:
               -H "Content-Type: application/json" \
               "${JIRA_BASE_URL}/rest/api/3/issue/${KEY}?expand=changelog&fields=summary,status")
 
+            echo "RESPONSE=$RESPONSE"
+
             ISSUE=$(echo "$RESPONSE" | jq -c --arg key "$KEY" '{
               key: $key,
               summary: .fields.summary,
@@ -329,8 +331,10 @@ jobs:
                 }
               ]
             }')
+            echo "ISSUE=$ISSUE"
 
             JIRA_ISSUES=$(echo "$JIRA_ISSUES" | jq --argjson issue "$ISSUE" '. + [$issue]')
+            echo "JIRA_ISSUES=$JIRA_ISSUES"
           done
 
           echo "$JIRA_ISSUES" | jq . > jira_issues.json
