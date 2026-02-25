@@ -258,6 +258,11 @@ jobs:
                 -H "Authorization: Bearer ${GH_TOKEN}" \
                 "https://api.github.com/repos/${ORG}/${REPO}/compare/${PREV_SHA}...${CURRENT_SHA}")
               MESSAGES=$(echo "$RESPONSE" | jq -r '.commits[].commit.message')
+              echo "PREV_SHA=$PREV_SHA"
+              echo "CURRENT_SHA=$CURRENT_SHA"
+              echo "MESSAGES=$MESSAGES"
+              echo "RESPONSE=$RESPONSE"
+
             fi
 
             ALL_MESSAGES="${ALL_MESSAGES}${MESSAGES}"$'\n'
