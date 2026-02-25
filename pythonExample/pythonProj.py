@@ -20,3 +20,4 @@ def arc4_encrypt_password(key, password):
 # Now you can call printme function
 printme("Hello from JFROG!!");
 printme("I am part of test skill 4 jira!!");
+printme("I am part of test skill 4 commit 2");
