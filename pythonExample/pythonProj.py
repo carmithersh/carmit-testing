@@ -18,4 +18,4 @@ def arc4_encrypt_password(key, password):
     return hashlib.md5(encrypted_password).hexdigest()
 
 # Now you can call printme function
-printme("Hello from JFROG");
+printme("Hello from JFROG!!");
