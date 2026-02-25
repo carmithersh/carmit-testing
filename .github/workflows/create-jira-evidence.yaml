@@ -305,7 +305,7 @@ jobs:
           IFS=';' read -ra KEYS <<< "${KEYS}"
           for KEY in "${KEYS[@]}"; do
             [ -z "$KEY" ] && continue
-            echo "KEY=$KEY"
+            echo "KEY=$KEY:jira key to retrieve"
 
             RESPONSE=$(curl -sf \
               -H "Authorization: Basic ${AUTH}" \
