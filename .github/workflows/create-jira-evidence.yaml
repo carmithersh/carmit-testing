@@ -275,6 +275,8 @@ jobs:
           echo "Commit ranges:"
           jq . commit_ranges.json
 
+          cat all_commit_messages.txt
+
       - name: Extract Jira issue keys from commit diff
         id: extract-jira-keys
         run: |
