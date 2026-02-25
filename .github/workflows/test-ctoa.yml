@@ -11,8 +11,8 @@ jobs:
     build-publish:        
         runs-on: ubuntu-latest
         env:
-          DOCKER_REPO: 'carmit-docker-local'
-          IMAGE_NAME: 'github-jfrog-testing:${{ github.run_number }}'  
+          DOCKER_REPO: 'pac-ai-generator-docker-local'
+          IMAGE_NAME: 'skills-jfrog-testing:${{ github.run_number }}'  
           
         outputs:
           digest: ${{ steps.build.outputs.digest }}                          
