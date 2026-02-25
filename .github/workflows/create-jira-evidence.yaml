@@ -286,24 +286,28 @@ jobs:
 
           KEYS=$(grep -oE '[A-Z]+-[0-9]+'  all_commit_messages.txt | sort -u)
 
-          echo "jira_keys=${KEYS}" >> "$GITHUB_OUTPUT"
-          echo "Found Jira keys: ${KEYS}"
+          
+          echo "${KEYS}" > jira_keys.txt
+
+          echo "Found Jira keys:"
+          cat jira_keys.txt
 
       - name: Query Jira transitions
         env:
           JIRA_BASE_URL: ${{ vars.JIRA_BASE_URL }}
           JIRA_USER_EMAIL: ${{ secrets.JIRA_USER_EMAIL }}
           JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
-          JIRA_KEYS: ${{ steps.extract-jira-keys.outputs.jira_keys }}
+          
         run: |
           AUTH=$(echo -n "${JIRA_USER_EMAIL}:${JIRA_API_TOKEN}" | base64)
           JIRA_ISSUES="[]"
 
-          IFS=',' read -ra KEYS <<< "${JIRA_KEYS}"
+          KEYS=$(cat jira_keys.txt)
           for KEY in "${KEYS[@]}"; do
             KEY=$(echo "$KEY" | xargs)
             [ -z "$KEY" ] && continue
-
+            echo "KEY=$KEY"
+            
             RESPONSE=$(curl -sf \
               -H "Authorization: Basic ${AUTH}" \
               -H "Content-Type: application/json" \
