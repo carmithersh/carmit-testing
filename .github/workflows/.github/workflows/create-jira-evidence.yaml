@@ -1,0 +1,347 @@
+name: Create Jira Evidence
+
+on:
+  workflow_dispatch:
+    inputs:
+      application_key:
+        description: 'JFrog application key'
+        required: true
+        default: 'myshop'
+      application_version:
+        description: 'Application version being promoted'
+        required: true
+      stage:
+        description: 'Promotion stage key'
+        required: true
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  create-jira-evidence:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup JFrog CLI
+        id: setup-jfrog-cli
+        uses: jfrog/setup-jfrog-cli@v4
+        env:
+          JF_URL: https://${{ vars.JF_URL }}
+        with:
+          oidc-provider-name: github-carmit-project-1
+
+      - name: Get current application version content
+        env:
+          JF_URL: ${{ vars.JF_URL }}
+          OIDC_TOKEN: ${{ steps.setup-jfrog-cli.outputs.oidc-token }}
+          APP_KEY: ${{ inputs.application_key }}
+          APP_VERSION: ${{ inputs.application_version }}
+        run: |
+          QUERY="query {
+            applications {
+              getApplicationVersion(
+                applicationKey: \"${APP_KEY}\"
+                version: \"${APP_VERSION}\"
+              ) {
+                status
+                releaseStatus
+                releasables {
+                  releasablesConnection {
+                    edges {
+                      node {
+                        name
+                        version
+                        packageType
+                        sha256
+                        releasableType
+                        artifacts {
+                          evidenceSubject {
+                            evidenceConnection(where: {
+                              predicateType: \"https://slsa.dev/provenance/v1\"
+                            }) {
+                              edges {
+                                node {
+                                  predicateType
+                                  predicate
+                                  verified
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }"
+
+          BODY=$(jq -n --arg q "$QUERY" '{query: $q}')
+
+          curl -sf -X POST \
+            "https://${JF_URL}/onemodel/api/v1/graphql" \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer ${OIDC_TOKEN}" \
+            -d "$BODY" -o current_version_response.json
+
+          jq '[
+            .data.applications.getApplicationVersion.releasables.releasablesConnection
+            .edges[].node.artifacts[].evidenceSubject.evidenceConnection.edges[].node
+            .predicate.buildDefinition.resolvedDependencies[] |
+            { gitCommit: .digest.gitCommit, uri: .uri }
+          ] | unique_by(.uri)' current_version_response.json > current_commit_info.json
+
+          echo "Current version commit info:"
+          jq . current_commit_info.json
+
+      - name: Get previous application version
+        id: previous-version
+        env:
+          JF_URL: ${{ vars.JF_URL }}
+          OIDC_TOKEN: ${{ steps.setup-jfrog-cli.outputs.oidc-token }}
+          APP_KEY: ${{ inputs.application_key }}
+          APP_VERSION: ${{ inputs.application_version }}
+        run: |
+          QUERY="query {
+            applications {
+              getApplication(key: \"${APP_KEY}\") {
+                versionsConnection(first: 50, orderBy: {versionSortType: SEMVER, direction: DESC}) {
+                  edges {
+                    node {
+                      version
+                    }
+                  }
+                }
+              }
+            }
+          }"
+
+          BODY=$(jq -n --arg q "$QUERY" '{query: $q}')
+
+          RESPONSE=$(curl -sf -X POST \
+            "https://${JF_URL}/onemodel/api/v1/graphql" \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer ${OIDC_TOKEN}" \
+            -d "$BODY")
+
+          VERSIONS=$(echo "$RESPONSE" | jq -r \
+            '.data.applications.getApplication.versionsConnection.edges[].node.version')
+
+          PREV_VERSION=""
+          FOUND_CURRENT=false
+          while IFS= read -r ver; do
+            if [ "$FOUND_CURRENT" = "true" ]; then
+              PREV_VERSION="$ver"
+              break
+            fi
+            if [ "$ver" = "${APP_VERSION}" ]; then
+              FOUND_CURRENT=true
+            fi
+          done <<< "$VERSIONS"
+
+          if [ -z "$PREV_VERSION" ]; then
+            echo "is_first_version=true" >> "$GITHUB_OUTPUT"
+            echo "previous_version=" >> "$GITHUB_OUTPUT"
+            echo "No previous version found — this is the first version."
+            echo "[]" > prev_commit_info.json
+            exit 0
+          fi
+
+          echo "is_first_version=false" >> "$GITHUB_OUTPUT"
+          echo "previous_version=${PREV_VERSION}" >> "$GITHUB_OUTPUT"
+          echo "Previous version: ${PREV_VERSION}"
+
+          PREV_QUERY="query {
+            applications {
+              getApplicationVersion(
+                applicationKey: \"${APP_KEY}\"
+                version: \"${PREV_VERSION}\"
+              ) {
+                releasables {
+                  releasablesConnection {
+                    edges {
+                      node {
+                        artifacts {
+                          evidenceSubject {
+                            evidenceConnection(where: {
+                              predicateType: \"https://slsa.dev/provenance/v1\"
+                            }) {
+                              edges {
+                                node {
+                                  predicate
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }"
+
+          PREV_BODY=$(jq -n --arg q "$PREV_QUERY" '{query: $q}')
+
+          curl -sf -X POST \
+            "https://${JF_URL}/onemodel/api/v1/graphql" \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer ${OIDC_TOKEN}" \
+            -d "$PREV_BODY" -o prev_version_response.json
+
+          jq '[
+            .data.applications.getApplicationVersion.releasables.releasablesConnection
+            .edges[].node.artifacts[].evidenceSubject.evidenceConnection.edges[].node
+            .predicate.buildDefinition.resolvedDependencies[] |
+            { gitCommit: .digest.gitCommit, uri: .uri }
+          ] | unique_by(.uri)' prev_version_response.json > prev_commit_info.json
+
+          echo "Previous version commit info:"
+          jq . prev_commit_info.json
+
+      - name: Extract Jira issue keys from commit diff
+        id: extract-jira-keys
+        env:
+          GH_TOKEN: ${{ github.token }}
+          IS_FIRST: ${{ steps.previous-version.outputs.is_first_version }}
+        run: |
+          CURRENT_COMMITS=$(cat current_commit_info.json)
+          PREV_COMMITS=$(cat prev_commit_info.json)
+
+          COMMIT_RANGES="[]"
+          ALL_JIRA_KEYS=""
+
+          COUNT=$(echo "$CURRENT_COMMITS" | jq 'length')
+          for i in $(seq 0 $((COUNT - 1))); do
+            CURRENT_SHA=$(echo "$CURRENT_COMMITS" | jq -r ".[$i].gitCommit")
+            REPO_URI=$(echo "$CURRENT_COMMITS" | jq -r ".[$i].uri")
+
+            REPO_PATH=$(echo "$REPO_URI" | sed 's|git+https://github.com/||' | sed 's|@.*||')
+            ORG=$(echo "$REPO_PATH" | cut -d'/' -f1)
+            REPO=$(echo "$REPO_PATH" | cut -d'/' -f2)
+
+            PREV_SHA=""
+            if [ "${IS_FIRST}" = "true" ]; then
+              RESPONSE=$(curl -sf \
+                -H "Authorization: Bearer ${GH_TOKEN}" \
+                "https://api.github.com/repos/${ORG}/${REPO}/commits/${CURRENT_SHA}")
+              MESSAGES=$(echo "$RESPONSE" | jq -r '.commit.message')
+            else
+              PREV_SHA=$(echo "$PREV_COMMITS" | jq -r --arg uri "$REPO_URI" \
+                '[.[] | select(.uri == $uri)][0].gitCommit // empty')
+
+              if [ -z "$PREV_SHA" ]; then
+                PREV_SHA=$(echo "$PREV_COMMITS" | jq -r '.[0].gitCommit // empty')
+              fi
+
+              RESPONSE=$(curl -sf \
+                -H "Authorization: Bearer ${GH_TOKEN}" \
+                "https://api.github.com/repos/${ORG}/${REPO}/compare/${PREV_SHA}...${CURRENT_SHA}")
+              MESSAGES=$(echo "$RESPONSE" | jq -r '.commits[].commit.message')
+            fi
+
+            KEYS=$(echo "$MESSAGES" | grep -oE '(PROJ|TEAM)-[0-9]+' || true)
+            ALL_JIRA_KEYS="${ALL_JIRA_KEYS} ${KEYS}"
+
+            COMMIT_RANGES=$(echo "$COMMIT_RANGES" | jq \
+              --arg repo "$REPO_URI" \
+              --arg prev "${PREV_SHA:-}" \
+              --arg curr "$CURRENT_SHA" \
+              '. + [{ repository: $repo, previousCommit: $prev, currentCommit: $curr }]')
+          done
+
+          echo "$COMMIT_RANGES" | jq . > commit_ranges.json
+
+          UNIQUE_KEYS=$(echo "$ALL_JIRA_KEYS" | tr ' ' '\n' | sort -u | grep -v '^$' | tr '\n' ',' | sed 's/,$//')
+          echo "jira_keys=${UNIQUE_KEYS}" >> "$GITHUB_OUTPUT"
+          echo "Found Jira keys: ${UNIQUE_KEYS}"
+
+      - name: Query Jira transitions
+        env:
+          JIRA_BASE_URL: ${{ vars.JIRA_BASE_URL }}
+          JIRA_USER_EMAIL: ${{ secrets.JIRA_USER_EMAIL }}
+          JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
+          JIRA_KEYS: ${{ steps.extract-jira-keys.outputs.jira_keys }}
+        run: |
+          AUTH=$(echo -n "${JIRA_USER_EMAIL}:${JIRA_API_TOKEN}" | base64)
+          JIRA_ISSUES="[]"
+
+          IFS=',' read -ra KEYS <<< "${JIRA_KEYS}"
+          for KEY in "${KEYS[@]}"; do
+            KEY=$(echo "$KEY" | xargs)
+            [ -z "$KEY" ] && continue
+
+            RESPONSE=$(curl -sf \
+              -H "Authorization: Basic ${AUTH}" \
+              -H "Content-Type: application/json" \
+              "${JIRA_BASE_URL}/rest/api/3/issue/${KEY}?expand=changelog&fields=summary,status")
+
+            ISSUE=$(echo "$RESPONSE" | jq -c --arg key "$KEY" '{
+              key: $key,
+              summary: .fields.summary,
+              currentStatus: .fields.status.name,
+              transitions: [
+                .changelog.histories[] |
+                . as $h |
+                .items[] |
+                select(.field == "status") |
+                {
+                  from: .fromString,
+                  to: .toString,
+                  timestamp: $h.created,
+                  author: $h.author.displayName
+                }
+              ]
+            }')
+
+            JIRA_ISSUES=$(echo "$JIRA_ISSUES" | jq --argjson issue "$ISSUE" '. + [$issue]')
+          done
+
+          echo "$JIRA_ISSUES" | jq . > jira_issues.json
+          echo "Jira issues collected:"
+          jq . jira_issues.json
+
+      - name: Build evidence predicate
+        env:
+          APP_KEY: ${{ inputs.application_key }}
+          APP_VERSION: ${{ inputs.application_version }}
+          PREV_VERSION: ${{ steps.previous-version.outputs.previous_version }}
+          STAGE: ${{ inputs.stage }}
+        run: |
+          jq -n \
+            --arg app_key "${APP_KEY}" \
+            --arg app_version "${APP_VERSION}" \
+            --arg prev_version "${PREV_VERSION}" \
+            --arg stage "${STAGE}" \
+            --slurpfile commit_ranges commit_ranges.json \
+            --slurpfile jira_issues jira_issues.json \
+            '{
+              applicationKey: $app_key,
+              applicationVersion: $app_version,
+              previousApplicationVersion: $prev_version,
+              stage: $stage,
+              commitRange: $commit_ranges[0],
+              jiraIssues: $jira_issues[0]
+            }' > jira-evidence.json
+
+          echo "Evidence predicate:"
+          jq . jira-evidence.json
+
+      - name: Create evidence on application version
+        env:
+          APP_KEY: ${{ inputs.application_key }}
+          APP_VERSION: ${{ inputs.application_version }}
+          EVIDENCE_SIGNING_KEY: ${{ vars.EVIDENCE_SIGNING_KEY }}
+        run: |
+          jf evd create \
+            --predicate-type "https://jfrog.com/evidence/jira-transitions/v1" \
+            --predicate jira-evidence.json \
+            --application-key "${APP_KEY}" \
+            --application-version "${APP_VERSION}" \
+            --key-alias "snow2" \
+            --key "${EVIDENCE_SIGNING_KEY}"
