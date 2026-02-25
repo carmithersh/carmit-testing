@@ -284,8 +284,7 @@ jobs:
         run: |
           ALL_MESSAGES=$(cat all_commit_messages.txt)
 
-          KEYS=$(grep -oE '[A-Z]+-[0-9]+'  all_commit_messages.txt | sort -u)
-
+          KEYS=$(grep -oE '[A-Z]+-[0-9]+' all_commit_messages.txt | sort -u | tr '\n' ';')
           
           echo "${KEYS}" > jira_keys.txt
 
@@ -307,7 +306,7 @@ jobs:
             KEY=$(echo "$KEY" | xargs)
             [ -z "$KEY" ] && continue
             echo "KEY=$KEY"
-            
+
             RESPONSE=$(curl -sf \
               -H "Authorization: Basic ${AUTH}" \
               -H "Content-Type: application/json" \
