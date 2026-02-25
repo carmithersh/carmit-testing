@@ -278,17 +278,16 @@ jobs:
           echo "Commit ranges:"
           jq . commit_ranges.json
           cat all_commit_messages.txt
-          
+
       - name: Extract Jira issue keys from commit diff
         id: extract-jira-keys
         run: |
           ALL_MESSAGES=$(cat all_commit_messages.txt)
 
-          KEYS=$(echo "$ALL_MESSAGES" | grep -oE '(PROJ|TEAM)-[0-9]+' || true)
-          UNIQUE_KEYS=$(echo "$KEYS" | sort -u | grep -v '^$' | tr '\n' ',' | sed 's/,$//')
+          KEYS=$(grep -oE '[A-Z]+-[0-9]+'  all_commit_messages.txt | sort -u)
 
-          echo "jira_keys=${UNIQUE_KEYS}" >> "$GITHUB_OUTPUT"
-          echo "Found Jira keys: ${UNIQUE_KEYS}"
+          echo "jira_keys=${KEYS}" >> "$GITHUB_OUTPUT"
+          echo "Found Jira keys: ${KEYS}"
 
       - name: Query Jira transitions
         env:
