@@ -11,7 +11,7 @@ jobs:
     build-publish:        
         runs-on: ubuntu-latest
         env:
-          DOCKER_REPO: 'pac-ai-generator-docker-local'
+          DOCKER_REPO: 'marketplace-docker-local'
           IMAGE_NAME: 'skills-jfrog-testing:${{ github.run_number }}'  
         steps:
             - name: Checkout the repository    
@@ -22,13 +22,13 @@ jobs:
               uses: jfrog/setup-jfrog-cli@v4
               env: 
                 JF_URL: https://${{ vars.CTOA_JF_URL }}/
-                JF_PROJECT: pac-ai-generator
+                JF_PROJECT: marketplace
               with:
                   oidc-provider-name: github-carmit-project-1
        
             - name: configure jfrog environment
               run: |
-                jf pip-config --repo-resolve=pac-ai-generator-python-virtual    
+                jf pip-config --repo-resolve=marketplace-python-virtual    
                 
             - name: configure environment
               run: |                      
@@ -45,7 +45,7 @@ jobs:
 
             - name: publish python package
               run: |
-                jf rt u dist/ pac-ai-generator-python-virtual/example-projects/ --module=jfrog-python-example 
+                jf rt u dist/ marketplace-python-virtual/example-projects/ --module=jfrog-python-example 
 
             - name: Set up Docker Buildx
               uses: docker/setup-buildx-action@v3    
