@@ -248,22 +248,19 @@ jobs:
             echo "REPO=$REPO"
 
             PREV_SHA=""
-            if [ "${IS_FIRST}" = "true" ]; then
+            if [ "${IS_FIRST}" != "true" ]; then
+              PREV_SHA=$(echo "$PREV_COMMITS" | jq -r --arg uri "$REPO_URI" \
+                '[.[] | select(.uri == $uri)][0].gitCommit // empty')
+              echo "PREV_SHA=$PREV_SHA"
+            fi
+
+            if [ -z "$PREV_SHA" ]; then
+              echo "No previous commit for ${REPO_URI} — fetching single commit"
               RESPONSE=$(curl -sf \
                 -H "Authorization: Bearer ${GH_TOKEN}" \
                 "https://api.github.com/repos/${ORG}/${REPO}/commits/${CURRENT_SHA}")
               MESSAGES=$(echo "$RESPONSE" | jq -r '.commit.message')
             else
-              echo "getting PREV_SHA"
-              PREV_SHA=$(echo "$PREV_COMMITS" | jq -r --arg uri "$REPO_URI" \
-                '[.[] | select(.uri == $uri)][0].gitCommit // empty')
-              echo "PREV_SHA=$PREV_SHA"
-
-              if [ -z "$PREV_SHA" ]; then
-                PREV_SHA=$(echo "$PREV_COMMITS" | jq -r '.[0].gitCommit // empty')
-              fi
-              echo "PREV_SHA 2 =$PREV_SHA"
-              
               RESPONSE=$(curl -sf \
                 -H "Authorization: Bearer ${GH_TOKEN}" \
                 "https://api.github.com/repos/${ORG}/${REPO}/compare/${PREV_SHA}...${CURRENT_SHA}")
