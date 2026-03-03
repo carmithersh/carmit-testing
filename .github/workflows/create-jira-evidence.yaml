@@ -219,8 +219,9 @@ jobs:
           IS_FIRST: ${{ steps.previous-version.outputs.is_first_version }}
         run: |
           CURRENT_COMMITS=$(cat current_commit_info.json)
+          echo "CURRENT_COMMITS=$CURRENT_COMMITS"
           PREV_COMMITS=$(cat prev_commit_info.json)
-
+          echo "PREV_COMMITS=$PREV_COMMITS"
           COMMIT_RANGES="[]"
           ALL_MESSAGES=""
 
@@ -234,11 +235,17 @@ jobs:
 
           for i in $(seq 0 $((COUNT - 1))); do
             CURRENT_SHA=$(echo "$CURRENT_COMMITS" | jq -r ".[$i].gitCommit")
+            echo "CURRENT_SHA=$CURRENT_SHA"
+            
             REPO_URI=$(echo "$CURRENT_COMMITS" | jq -r ".[$i].uri")
-
+            echo "REPO_URI=$REPO_URI"
+            
             REPO_PATH=$(echo "$REPO_URI" | sed 's|git+https://github.com/||' | sed 's|@.*||')
             ORG=$(echo "$REPO_PATH" | cut -d'/' -f1)
             REPO=$(echo "$REPO_PATH" | cut -d'/' -f2)
+
+            echo "ORG=$ORG"
+            echo "REPO=$REPO"
 
             PREV_SHA=""
             if [ "${IS_FIRST}" = "true" ]; then
@@ -247,13 +254,16 @@ jobs:
                 "https://api.github.com/repos/${ORG}/${REPO}/commits/${CURRENT_SHA}")
               MESSAGES=$(echo "$RESPONSE" | jq -r '.commit.message')
             else
+              echo "getting PREV_SHA"
               PREV_SHA=$(echo "$PREV_COMMITS" | jq -r --arg uri "$REPO_URI" \
                 '[.[] | select(.uri == $uri)][0].gitCommit // empty')
+              echo "PREV_SHA=$PREV_SHA"
 
               if [ -z "$PREV_SHA" ]; then
                 PREV_SHA=$(echo "$PREV_COMMITS" | jq -r '.[0].gitCommit // empty')
               fi
-
+              echo "PREV_SHA 2 =$PREV_SHA"
+              
               RESPONSE=$(curl -sf \
                 -H "Authorization: Bearer ${GH_TOKEN}" \
                 "https://api.github.com/repos/${ORG}/${REPO}/compare/${PREV_SHA}...${CURRENT_SHA}")
