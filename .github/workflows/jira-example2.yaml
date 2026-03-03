@@ -367,10 +367,5 @@ jobs:
           APP_VERSION: ${{ inputs.application_version }}
           EVIDENCE_SIGNING_KEY: ${{ secrets.EVIDENCE_SIGNING_KEY }}
         run: |
-          jf evd create \
-            --predicate-type "https://jfrog.com/evidence/jira-transitions/v1" \
-            --predicate jira-evidence.json \
-            --application-key "${APP_KEY}" \
-            --application-version "${APP_VERSION}" \
-            --key-alias "snow2" \
-            --key "${EVIDENCE_SIGNING_KEY}"
+          jf evd create --predicate-type "https://jfrog.com/evidence/jira-transitions/v1" --predicate jira-evidence.json --application-key "${APP_KEY}" --application-version "${APP_VERSION}" --key-alias "snow2" --key "${EVIDENCE_SIGNING_KEY}"
+          echo "Evidence created successfully"
