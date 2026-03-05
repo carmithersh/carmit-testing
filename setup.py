@@ -4,7 +4,7 @@ from setuptools import setup
 
 setup(
     name='jfrog-python-example',
-    version='1.16',
+    version='1.17',
     description='Project example for building Python project with JFrog products.',
     author='JFrog',
     author_email='jfrog@jfrog.com',
