@@ -111,6 +111,7 @@ jobs:
                 --package-repo-name  "${{ env.DOCKER_REPO }}"  \ 
                 --package-name "${{ env.IMAGE_NAME_STRIP }}" \
                 --package-version "${{ github.run_number }}" \
+                --project "pac-ai-generator" \
                 --key-alias "${{ vars.EVIDENCE_PUBLIC_KEY_ALIAS }}" 
                   
             - name: Attest Build Provenance
