@@ -13,7 +13,7 @@ jobs:
         env:
           DOCKER_REPO: 'pac-ai-generator-docker-local'
           IMAGE_NAME_STRIP: 'skills-jfrog-testing'
-          IMAGE_NAME: '${{ env.IMAGE_NAME_STRIP }}:${{ github.run_number }}'  
+          IMAGE_NAME: 'skills-jfrog-testing:${{ github.run_number }}'  
         steps:
             - name: Checkout the repository    
               uses: actions/checkout@v4
