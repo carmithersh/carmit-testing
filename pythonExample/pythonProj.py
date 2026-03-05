@@ -21,4 +21,4 @@ def arc4_encrypt_password(key, password):
 printme("Hello from JFROG!!");
 printme("I am part of test skill 1 jira");
 printme("I am part of test skill 1 jira");
-printme("I am part of test skill 1jira");
+printme("I am part of test skill 1 jira");
