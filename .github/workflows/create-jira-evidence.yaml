@@ -116,7 +116,7 @@
             QUERY="query {
               applications {
                 getApplication(key: \"${APP_KEY}\") {
-                  versionsConnection(first: 50, orderBy: {versionSortType: SEMVER, direction: DESC}) {
+                  versionsConnection(first: 50, orderBy: {field: VERSION, versionSortType: SEMVER, direction: DESC}) {
                     edges {
                       node {
                         version
