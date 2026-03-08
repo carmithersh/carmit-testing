@@ -127,22 +127,29 @@ jobs:
             fi
             # extract the object with uri from the current_commit_info.json and loop through each commit
             OBJECTS=$(jq -r --arg uri "$uri" '[.[] | select(.uri == $uri)]' current_commit_info.json)
+            echo "OBJECTS: $OBJECTS"
             # loop over the objects json array and get the earliest commit date and sha
             EARLIEST_COMMIT_DATE=""
             EARLIEST_COMMIT_SHA=""
             OBJECT_COUNT=$(echo "$OBJECTS" | jq 'length')
+            echo "OBJECT_COUNT: $OBJECT_COUNT"
             for i in $(seq 0 $((OBJECT_COUNT - 1))); do
+              echo "i: $i"
               object=$(echo "$OBJECTS" | jq -c ".[$i]")
+              echo "object: $object"
               CURRENT_SHA=$(echo "$object" | jq -r '.gitCommit')
               echo "CURRENT_SHA: $CURRENT_SHA"
-              # extract owner and repo form uri
-              OWNER=$(echo "$uri" | cut -d'/' -f1)
-              REPO=$(echo "$uri" | cut -d'/' -f2)
+              # extract owner and repo from uri with format git+https://github.com/***ersh/carmit-testing@refs/heads/main
+              OWNER=$(echo "$uri" | sed 's|git+https://github.com/||' | sed 's|@.*||' | cut -d'/' -f1)
+              echo "OWNER: $OWNER"
+              # extract repository name and repo from uri with format git+https://github.com/***ersh/carmit-testing@refs/heads/main
+              REPO=$(echo "$uri" | sed 's|git+https://github.com/||' | sed 's|@.*||' | cut -d'/' -f2)
+              echo "REPO: $REPO"
               RESPONSE=$(curl -sf \
                 -H "Authorization: Bearer ${GH_TOKEN}" \
                 "https://api.github.com/repos/${OWNER}/${REPO}/commits/${CURRENT_SHA}")
               echo "RESPONSE: $RESPONSE"
-              
+
               COMMIT_DATE=$(echo "$RESPONSE" | jq -r '.commit.author.date')
               echo "COMMIT_DATE: $COMMIT_DATE"
               if [ -z "$EARLIEST_COMMIT_DATE" ]; then
