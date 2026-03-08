@@ -167,7 +167,7 @@ jobs:
             done
 
             # replace the uri information in current_commit_info.json with the earliest commit sha            
-            jq --arg uri "$uri"  --arg sha "$EARLIEST_COMMIT_SHA" \
+            jq --arg uri "${uri}"  --arg sha "${EARLIEST_COMMIT_SHA}" \
              'map(if .uri == $uri then .gitCommit = $sha  else . end)' current_commit_info.json  > current_commit_info.json
 
           done
