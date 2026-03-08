@@ -245,6 +245,8 @@ jobs:
             CURRENT_SHA=$(echo "$CURRENT_COMMITS" | jq -r ".[$i].gitCommit")
             
             REPO_URI=$(echo "$CURRENT_COMMITS" | jq -r ".[$i].uri")
+
+            echo "REPO_URI=$REPO_URI"
             
             REPO_PATH=$(echo "$REPO_URI" | sed 's|git+https://github.com/||' | sed 's|@.*||')
             ORG=$(echo "$REPO_PATH" | cut -d'/' -f1)
