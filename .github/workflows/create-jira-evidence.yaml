@@ -282,7 +282,7 @@ jobs:
             .edges // [] | .[]?.node
             .predicate.buildDefinition.resolvedDependencies[]? |
             { gitCommit: .digest.gitCommit, uri: .uri }
-          ] | unique_by(.uri)' prev_version_response.json > prev_commit_info.json
+          ] | unique_by([.uri, .gitCommit])' prev_version_response.json > prev_commit_info.json
 
           echo "Previous version commit info:"
           jq . prev_commit_info.json
