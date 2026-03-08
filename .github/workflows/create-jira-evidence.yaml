@@ -165,14 +165,14 @@ jobs:
               echo "EARLIEST_COMMIT_DATE: $EARLIEST_COMMIT_DATE"
               echo "EARLIEST_COMMIT_SHA: $EARLIEST_COMMIT_SHA"
             done
-            
-            cat current_commit_info.json
+
             # replace the uri information in current_commit_info.json with the earliest commit sha            
-            jq --arg uriP "${uri}"  --arg sha "${EARLIEST_COMMIT_SHA}" \
-             'map(if .uri == $uriP then .gitCommit = $sha  else . end)' current_commit_info.json  > current_commit_info.json
+            jq --arg uri "${uri}"  --arg sha "${EARLIEST_COMMIT_SHA}" \
+             'map(if .uri == $uri then .gitCommit = $sha  else . end)' current_commit_info.json  > current_commit_info.tmp \
+              && mv current_commit_info.tmp current_commit_info.json
 
           done
-          echo "Current commit info after replacement:."
+          echo "Current commit info after replacement:"
           cat current_commit_info.json
 
 
