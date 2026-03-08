@@ -96,22 +96,14 @@ jobs:
             .edges // [] | .[]?.node
             .predicate.buildDefinition.resolvedDependencies[]? |
             { gitCommit: .digest.gitCommit, uri: .uri }
-          ] | unique_by(.uri)' current_version_response.json > uri_sha_info.json
+          ] | unique_by(.uri)' current_version_response.json > current_commit_info.json
 
-          WITH_EVIDENCE=$(jq 'length' uri_sha_info.json)
+          WITH_EVIDENCE=$(jq 'length' current_commit_info.json)
           echo "Releasables: ${TOTAL_RELEASABLES} total, ${WITH_EVIDENCE} with SLSA provenance evidence"
           if [ "$WITH_EVIDENCE" -eq 0 ]; then
             echo "::warning::No releasables have SLSA provenance evidence — commit range will be empty"
           fi
-          # get commit information including date from git history
-          for uri in $(jq -r '.[] | .uri' uri_sha_info.json); do
-            git log --pretty=format:"%h %ad" --date=short $uri > commit_info.txt
-            jq '.[] | {uri: .uri, gitCommit: .gitCommit, date: .date}' commit_info.txt > commit_info.json
-          done
-          # select earliest commit date into current_commit_info.json
-          jq '.[] | {date: .date}' commit_info.json | sort -r | head -n 1 > current_commit_info.json
-          
-          echo "Earliest commit date: $(cat current_commit_info.json)"
+          jq . current_commit_info.json
 
       - name: Get previous application version
         id: previous-version
@@ -245,8 +237,6 @@ jobs:
             CURRENT_SHA=$(echo "$CURRENT_COMMITS" | jq -r ".[$i].gitCommit")
             
             REPO_URI=$(echo "$CURRENT_COMMITS" | jq -r ".[$i].uri")
-
-            echo "REPO_URI=$REPO_URI"
             
             REPO_PATH=$(echo "$REPO_URI" | sed 's|git+https://github.com/||' | sed 's|@.*||')
             ORG=$(echo "$REPO_PATH" | cut -d'/' -f1)
