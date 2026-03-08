@@ -172,6 +172,10 @@ jobs:
               && mv current_commit_info.tmp current_commit_info.json
 
           done
+          # unique the current_commit_info.json by uri
+          jq 'unique_by(.uri)' current_commit_info.json > current_commit_info.tmp \
+            && mv current_commit_info.tmp current_commit_info.json
+
           echo "Current commit info after replacement:"
           cat current_commit_info.json
 
@@ -283,7 +287,79 @@ jobs:
           echo "Previous version commit info:"
           jq . prev_commit_info.json
 
+      - name: Get latest commit date
+        id: latest-commit-date
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: | 
+          echo "Previous version commit info: "
+          cat prev_commit_info.json
+          echo "================================================"
+          
+          # query github for the earliest commit date if a single uri have multiple commits
+          # check if uri have multiple commits in prev_commit_info.json
+          
+          for uri in $(jq -r '.[] | .uri' prev_commit_info.json); do
+            MULTIPLE_COMMITS=$(jq -r --arg uri "$uri" '[.[] | select(.uri == $uri)]' prev_commit_info.json | jq 'length')
+            if [ "$MULTIPLE_COMMITS" -gt 1 ]; then
+              echo "URI: $uri has multiple commits"
+              echo "MULTIPLE_COMMITS: $MULTIPLE_COMMITS"
+            else
+              echo "URI: $uri has single commit"
+              # move to the next uri
+              continue              
+            fi
+            # extract the object with uri from the prev_commit_info.json and loop through each commit
+            OBJECTS=$(jq -r --arg uri "$uri" '[.[] | select(.uri == $uri)]' prev_commit_info.json)
+            echo "OBJECTS: $OBJECTS"
+            # loop over the objects json array and get the earliest commit date and sha
+            LATEST_COMMIT_DATE=""
+            LATEST_COMMIT_SHA=""
+            OBJECT_COUNT=$(echo "$OBJECTS" | jq 'length')
+            echo "OBJECT_COUNT: $OBJECT_COUNT"
+            for i in $(seq 0 $((OBJECT_COUNT - 1))); do
+              echo "i: $i"
+              object=$(echo "$OBJECTS" | jq -c ".[$i]")
+              echo "object: $object"
+              CURRENT_SHA=$(echo "$object" | jq -r '.gitCommit')
+              echo "CURRENT_SHA: $CURRENT_SHA"
+              # extract owner and repo from uri with format git+https://github.com/owner/repo@refs/heads/main
+              OWNER=$(echo "$uri" | sed 's|git+https://github.com/||' | sed 's|@.*||' | cut -d'/' -f1)
+              echo "OWNER: $OWNER"
+              # extract repository name and repo from uri with format git+https://github.com/owner/repo@refs/heads/main
+              REPO=$(echo "$uri" | sed 's|git+https://github.com/||' | sed 's|@.*||' | cut -d'/' -f2)
+              echo "REPO: $REPO"
+              RESPONSE=$(curl -sf \
+                -H "Authorization: Bearer ${GH_TOKEN}" \
+                "https://api.github.com/repos/${OWNER}/${REPO}/commits/${CURRENT_SHA}")
+              echo "RESPONSE: $RESPONSE"
 
+              COMMIT_DATE=$(echo "$RESPONSE" | jq -r '.commit.author.date')
+              echo "COMMIT_DATE: $COMMIT_DATE"
+              if [ -z "$LATEST_COMMIT_DATE" ]; then
+                LATEST_COMMIT_DATE="$COMMIT_DATE"
+                LATEST_COMMIT_SHA="$CURRENT_SHA"
+              fi
+              if [[ "$COMMIT_DATE" > "$LATEST_COMMIT_DATE" ]]; then
+                LATEST_COMMIT_DATE="$COMMIT_DATE"
+                LATEST_COMMIT_SHA="$CURRENT_SHA"
+              fi
+              echo "LATEST_COMMIT_DATE: $LATEST_COMMIT_DATE"
+              echo "LATEST_COMMIT_SHA: $LATEST_COMMIT_SHA"
+            done
+
+            # replace the uri information in prev_commit_info.json with the earliest commit sha            
+            jq --arg uri "${uri}"  --arg sha "${LATEST_COMMIT_SHA}" \
+             'map(if .uri == $uri then .gitCommit = $sha  else . end)' prev_commit_info.json  > prev_commit_info.tmp \
+              && mv prev_commit_info.tmp prev_commit_info.json
+
+          done
+          # unique the prev_commit_info.json by uri
+          jq 'unique_by(.uri)' prev_commit_info.json > prev_commit_info.tmp \
+            && mv prev_commit_info.tmp prev_commit_info.json
+
+          echo "Current commit info after replacement:"
+          cat prev_commit_info.json
 
 
       - name: Perform GIT diff
