@@ -107,6 +107,8 @@ jobs:
 
       - name: Get earliest commit date
         id: earliest-commit-date
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: | 
           echo "Current commit info: "
           cat current_commit_info.json
