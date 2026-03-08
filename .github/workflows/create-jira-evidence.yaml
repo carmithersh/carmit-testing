@@ -125,11 +125,15 @@ jobs:
               # move to the next uri
               continue              
             fi
-            # extract the uri and git commit sha from the current_commit_info.json and loop through each commit
-            for commit in $(jq -r --arg uri "$uri" '[.[] | select(.uri == $uri)]' current_commit_info.json); do
-              EARLIEST_COMMIT_DATE=""
-              EARLIEST_COMMIT_SHA=""
-              CURRENT_SHA=$(echo "$commit" | jq -r '.gitCommit')
+            # extract the object with uri from the current_commit_info.json and loop through each commit
+            OBJECTS=$(jq -r --arg uri "$uri" '[.[] | select(.uri == $uri)]' current_commit_info.json)
+            # loop over the objects json array and get the earliest commit date and sha
+            EARLIEST_COMMIT_DATE=""
+            EARLIEST_COMMIT_SHA=""
+            OBJECT_COUNT=$(echo "$OBJECTS" | jq 'length')
+            for i in $(seq 0 $((OBJECT_COUNT - 1))); do
+              object=$(echo "$OBJECTS" | jq -c ".[$i]")
+              CURRENT_SHA=$(echo "$object" | jq -r '.gitCommit')
               echo "CURRENT_SHA: $CURRENT_SHA"
               RESPONSE=$(curl -sf \
                 -H "Authorization: Bearer ${GH_TOKEN}" \
@@ -141,11 +145,10 @@ jobs:
                 EARLIEST_COMMIT_DATE="$COMMIT_DATE"
                 EARLIEST_COMMIT_SHA="$CURRENT_SHA"
               fi
-              if [ "$COMMIT_DATE" -lt "$EARLIEST_COMMIT_DATE" ]; then
+              if [[ "$COMMIT_DATE" < "$EARLIEST_COMMIT_DATE" ]]; then
                 EARLIEST_COMMIT_DATE="$COMMIT_DATE"
                 EARLIEST_COMMIT_SHA="$CURRENT_SHA"
               fi
-            
               echo "EARLIEST_COMMIT_DATE: $EARLIEST_COMMIT_DATE"
               echo "EARLIEST_COMMIT_SHA: $EARLIEST_COMMIT_SHA"
             done
