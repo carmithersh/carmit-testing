@@ -96,7 +96,7 @@ jobs:
             .edges // [] | .[]?.node
             .predicate.buildDefinition.resolvedDependencies[]? |
             { gitCommit: .digest.gitCommit, uri: .uri }
-          ] | unique_by(.uri)' current_version_response.json > current_commit_info.json
+          ] | unique_by([.uri, .gitCommit])' current_version_response.json > current_commit_info.json
 
           WITH_EVIDENCE=$(jq 'length' current_commit_info.json)
           echo "Releasables: ${TOTAL_RELEASABLES} total, ${WITH_EVIDENCE} with SLSA provenance evidence"
@@ -104,6 +104,59 @@ jobs:
             echo "::warning::No releasables have SLSA provenance evidence — commit range will be empty"
           fi
           jq . current_commit_info.json
+
+      - name: Get earliest commit date
+        id: earliest-commit-date
+        run: | 
+          echo "Current commit info: "
+          cat current_commit_info.json
+          echo "================================================"
+          
+          # query github for the earliest commit date if a single uri have multiple commits
+          # check if uri have multiple commits in current_commit_info.json
+          
+          for uri in $(jq -r '.[] | .uri' current_commit_info.json); do
+            MULTIPLE_COMMITS=$(jq -r --arg uri "$uri" '[.[] | select(.uri == $uri)]' current_commit_info.json | jq 'length')
+            if [ "$MULTIPLE_COMMITS" -gt 1 ]; then
+              echo "URI: $uri has multiple commits"
+              echo "MULTIPLE_COMMITS: $MULTIPLE_COMMITS"
+            else
+              echo "URI: $uri has single commit"
+              # move to the next uri
+              continue              
+            fi
+            # extract the uri and git commit sha from the current_commit_info.json and loop through each commit
+            for commit in $(jq -r --arg uri "$uri" '[.[] | select(.uri == $uri)]' current_commit_info.json); do
+              EARLIEST_COMMIT_DATE=""
+              EARLIEST_COMMIT_SHA=""
+              CURRENT_SHA=$(echo "$commit" | jq -r '.gitCommit')
+              echo "CURRENT_SHA: $CURRENT_SHA"
+              RESPONSE=$(curl -sf \
+                -H "Authorization: Bearer ${GH_TOKEN}" \
+                "https://api.github.com/repos/${uri}/commits/${CURRENT_SHA}")
+              echo "RESPONSE: $RESPONSE"
+              COMMIT_DATE=$(echo "$RESPONSE" | jq -r '.commit.author.date')
+              echo "COMMIT_DATE: $COMMIT_DATE"
+              if [ -z "$EARLIEST_COMMIT_DATE" ]; then
+                EARLIEST_COMMIT_DATE="$COMMIT_DATE"
+                EARLIEST_COMMIT_SHA="$CURRENT_SHA"
+              fi
+              if [ "$COMMIT_DATE" -lt "$EARLIEST_COMMIT_DATE" ]; then
+                EARLIEST_COMMIT_DATE="$COMMIT_DATE"
+                EARLIEST_COMMIT_SHA="$CURRENT_SHA"
+              fi
+            
+              echo "EARLIEST_COMMIT_DATE: $EARLIEST_COMMIT_DATE"
+              echo "EARLIEST_COMMIT_SHA: $EARLIEST_COMMIT_SHA"
+            done
+
+            # replace the uri information in current_commit_info.json with the earliest commit sha
+            jq --arg uri "$uri" --arg sha "$EARLIEST_COMMIT_SHA" \
+              '[.[] | select(.uri == $uri)][0] = {uri: $uri, gitCommit: $sha}' current_commit_info.json > current_commit_info.json
+          done
+          echo "Current commit info after replacement:"
+          cat current_commit_info.json
+
 
       - name: Get previous application version
         id: previous-version
@@ -211,6 +264,9 @@ jobs:
 
           echo "Previous version commit info:"
           jq . prev_commit_info.json
+
+
+
 
       - name: Perform GIT diff
         id: git-diff
