@@ -135,10 +135,14 @@ jobs:
               object=$(echo "$OBJECTS" | jq -c ".[$i]")
               CURRENT_SHA=$(echo "$object" | jq -r '.gitCommit')
               echo "CURRENT_SHA: $CURRENT_SHA"
+              # extract owner and repo form uri
+              OWNER=$(echo "$uri" | cut -d'/' -f1)
+              REPO=$(echo "$uri" | cut -d'/' -f2)
               RESPONSE=$(curl -sf \
                 -H "Authorization: Bearer ${GH_TOKEN}" \
-                "https://api.github.com/repos/${uri}/commits/${CURRENT_SHA}")
+                "https://api.github.com/repos/${OWNER}/${REPO}/commits/${CURRENT_SHA}")
               echo "RESPONSE: $RESPONSE"
+              
               COMMIT_DATE=$(echo "$RESPONSE" | jq -r '.commit.author.date')
               echo "COMMIT_DATE: $COMMIT_DATE"
               if [ -z "$EARLIEST_COMMIT_DATE" ]; then
