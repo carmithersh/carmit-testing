@@ -328,7 +328,6 @@ jobs:
           if [ "$COUNT" -eq 0 ]; then
             echo "::warning::No SLSA provenance evidence found on any releasable — skipping commit diff"
             echo "$COMMIT_RANGES" | jq . > commit_ranges.json
-            echo "" > all_commit_messages.txt
             echo "[]" > uri_messages.json
             exit 0
           fi
@@ -383,12 +382,10 @@ jobs:
           done
 
           echo "$COMMIT_RANGES" | jq . > commit_ranges.json
-          echo "$ALL_MESSAGES" > all_commit_messages.txt
           echo "$URI_MESSAGES" | jq . > uri_messages.json
 
           echo "Commit ranges:"
           jq . commit_ranges.json
-          cat all_commit_messages.txt
 
       - name: Extract Jira issue keys from commit diff
         id: extract-jira-keys
