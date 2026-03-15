@@ -399,20 +399,23 @@ jobs:
           COUNT=$(jq 'length' uri_messages.json)
           for i in $(seq 0 $((COUNT - 1))); do
             URI=$(jq -r ".[$i].uri" uri_messages.json)
-            CURRENT_SHA=$(jq -r --arg uri "$URI" \
-              '.[] | select(.repository == $uri) | .currentCommit' commit_ranges.json)
-            MESSAGES=$(jq -r ".[$i].commits[].message" uri_messages.json)
+            COMMIT_COUNT=$(jq ".[$i].commits | length" uri_messages.json)
 
-            ISSUE_KEYS=$(echo "$MESSAGES" | grep -oE '[A-Z]+-[0-9]+' | sort -u)
-            ISSUES_JSON=$(echo "$ISSUE_KEYS" | jq -R . | jq -s 'map(select(length > 0))')
+            for j in $(seq 0 $((COMMIT_COUNT - 1))); do
+              COMMIT_SHA=$(jq -r ".[$i].commits[$j].sha" uri_messages.json)
+              MSG=$(jq -r ".[$i].commits[$j].message" uri_messages.json)
 
-            URI_COMMITS=$(echo "$URI_COMMITS" | jq \
-              --arg uri "$URI" \
-              --arg commit "$CURRENT_SHA" \
-              --argjson issues "$ISSUES_JSON" \
-              '.[$uri] = { commit: $commit, issues: $issues }')
+              ISSUE_KEYS=$(echo "$MSG" | grep -oE '[A-Z]+-[0-9]+' | sort -u)
+              ISSUES_JSON=$(echo "$ISSUE_KEYS" | jq -R . | jq -s 'map(select(length > 0))')
 
-            ALL_KEYS="${ALL_KEYS}${ISSUE_KEYS}"$'\n'
+              URI_COMMITS=$(echo "$URI_COMMITS" | jq \
+                --arg uri "$URI" \
+                --arg commit "$COMMIT_SHA" \
+                --argjson issues "$ISSUES_JSON" \
+                '.[$uri] += [{ commit: $commit, issues: $issues }]')
+
+              ALL_KEYS="${ALL_KEYS}${ISSUE_KEYS}"$'\n'
+            done
           done
 
           echo "$URI_COMMITS" | jq . > uri_commits.json
