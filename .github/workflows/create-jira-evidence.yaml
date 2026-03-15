@@ -352,6 +352,7 @@ jobs:
                 -H "Authorization: Bearer ${GH_TOKEN}" \
                 "https://api.github.com/repos/${ORG}/${REPO}/commits/${CURRENT_SHA}")
               MESSAGES=$(echo "$RESPONSE" | jq -r '.commit.message')
+              COMMITS_JSON=$(echo "$RESPONSE" | jq '[{ sha: .sha, message: .commit.message }]')
             else
               RESPONSE=$(curl -sf \
                 -H "Authorization: Bearer ${GH_TOKEN}" \
@@ -360,15 +361,19 @@ jobs:
                 [.base_commit.commit.message // empty,
                  .merge_base_commit.commit.message // empty,
                  .commits[].commit.message] | unique | .[]')
+              COMMITS_JSON=$(echo "$RESPONSE" | jq '[
+                (if .base_commit then { sha: .base_commit.sha, message: .base_commit.commit.message } else empty end),
+                (if .merge_base_commit then { sha: .merge_base_commit.sha, message: .merge_base_commit.commit.message } else empty end),
+                (.commits[]? | { sha: .sha, message: .commit.message })
+              ] | unique_by(.sha)')
             fi
 
             ALL_MESSAGES="${ALL_MESSAGES}${MESSAGES}"$'\n'
 
             URI_MESSAGES=$(echo "$URI_MESSAGES" | jq \
               --arg uri "$REPO_URI" \
-              --arg commit "$CURRENT_SHA" \
-              --arg msgs "$MESSAGES" \
-              '. + [{ uri: $uri, commit: $commit, messages: $msgs }]')
+              --argjson commits "$COMMITS_JSON" \
+              '. + [{ uri: $uri, commits: $commits }]')
 
             COMMIT_RANGES=$(echo "$COMMIT_RANGES" | jq \
               --arg repo "$REPO_URI" \
@@ -394,15 +399,16 @@ jobs:
           COUNT=$(jq 'length' uri_messages.json)
           for i in $(seq 0 $((COUNT - 1))); do
             URI=$(jq -r ".[$i].uri" uri_messages.json)
-            COMMIT=$(jq -r ".[$i].commit" uri_messages.json)
-            MESSAGES=$(jq -r ".[$i].messages" uri_messages.json)
+            CURRENT_SHA=$(jq -r --arg uri "$URI" \
+              '.[] | select(.repository == $uri) | .currentCommit' commit_ranges.json)
+            MESSAGES=$(jq -r ".[$i].commits[].message" uri_messages.json)
 
             ISSUE_KEYS=$(echo "$MESSAGES" | grep -oE '[A-Z]+-[0-9]+' | sort -u)
             ISSUES_JSON=$(echo "$ISSUE_KEYS" | jq -R . | jq -s 'map(select(length > 0))')
 
             URI_COMMITS=$(echo "$URI_COMMITS" | jq \
               --arg uri "$URI" \
-              --arg commit "$COMMIT" \
+              --arg commit "$CURRENT_SHA" \
               --argjson issues "$ISSUES_JSON" \
               '.[$uri] = { commit: $commit, issues: $issues }')
 
