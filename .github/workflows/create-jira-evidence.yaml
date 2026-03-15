@@ -322,12 +322,14 @@ jobs:
           PREV_COMMITS=$(cat prev_commit_info.json)
           COMMIT_RANGES="[]"
           ALL_MESSAGES=""
+          URI_MESSAGES="[]"
 
           COUNT=$(echo "$CURRENT_COMMITS" | jq 'length')
           if [ "$COUNT" -eq 0 ]; then
             echo "::warning::No SLSA provenance evidence found on any releasable — skipping commit diff"
             echo "$COMMIT_RANGES" | jq . > commit_ranges.json
             echo "" > all_commit_messages.txt
+            echo "[]" > uri_messages.json
             exit 0
           fi
 
@@ -362,6 +364,12 @@ jobs:
 
             ALL_MESSAGES="${ALL_MESSAGES}${MESSAGES}"$'\n'
 
+            URI_MESSAGES=$(echo "$URI_MESSAGES" | jq \
+              --arg uri "$REPO_URI" \
+              --arg commit "$CURRENT_SHA" \
+              --arg msgs "$MESSAGES" \
+              '. + [{ uri: $uri, commit: $commit, messages: $msgs }]')
+
             COMMIT_RANGES=$(echo "$COMMIT_RANGES" | jq \
               --arg repo "$REPO_URI" \
               --arg prev "${PREV_SHA:-}" \
@@ -371,6 +379,7 @@ jobs:
 
           echo "$COMMIT_RANGES" | jq . > commit_ranges.json
           echo "$ALL_MESSAGES" > all_commit_messages.txt
+          echo "$URI_MESSAGES" | jq . > uri_messages.json
 
           echo "Commit ranges:"
           jq . commit_ranges.json
@@ -379,8 +388,34 @@ jobs:
       - name: Extract Jira issue keys from commit diff
         id: extract-jira-keys
         run: |
-          KEYS=$(grep -oE '[A-Z]+-[0-9]+' all_commit_messages.txt | sort -u | tr '\n' ';')
+          URI_COMMITS="{}"
+          ALL_KEYS=""
+
+          COUNT=$(jq 'length' uri_messages.json)
+          for i in $(seq 0 $((COUNT - 1))); do
+            URI=$(jq -r ".[$i].uri" uri_messages.json)
+            COMMIT=$(jq -r ".[$i].commit" uri_messages.json)
+            MESSAGES=$(jq -r ".[$i].messages" uri_messages.json)
+
+            ISSUE_KEYS=$(echo "$MESSAGES" | grep -oE '[A-Z]+-[0-9]+' | sort -u)
+            ISSUES_JSON=$(echo "$ISSUE_KEYS" | jq -R . | jq -s 'map(select(length > 0))')
+
+            URI_COMMITS=$(echo "$URI_COMMITS" | jq \
+              --arg uri "$URI" \
+              --arg commit "$COMMIT" \
+              --argjson issues "$ISSUES_JSON" \
+              '.[$uri] = { commit: $commit, issues: $issues }')
+
+            ALL_KEYS="${ALL_KEYS}${ISSUE_KEYS}"$'\n'
+          done
+
+          echo "$URI_COMMITS" | jq . > uri_commits.json
+
+          KEYS=$(echo "$ALL_KEYS" | grep -oE '[A-Z]+-[0-9]+' | sort -u | tr '\n' ';')
           echo "${KEYS}" > jira_keys.txt
+
+          echo "URI commits with Jira issues:"
+          jq . uri_commits.json
           echo "Found Jira keys:"
           cat jira_keys.txt
 
@@ -442,13 +477,15 @@ jobs:
             --arg stage "${STAGE}" \
             --slurpfile commit_ranges commit_ranges.json \
             --slurpfile jira_issues jira_issues.json \
+            --slurpfile uri_commits uri_commits.json \
             '{
               applicationKey: $app_key,
               applicationVersion: $app_version,
               previousApplicationVersion: $prev_version,
               stage: $stage,
               commitRange: $commit_ranges[0],
-              jiraIssues: $jira_issues[0]
+              jiraIssues: $jira_issues[0],
+              uriCommits: $uri_commits[0]
             }' > jira-evidence.json
 
           echo "Evidence predicate:"
