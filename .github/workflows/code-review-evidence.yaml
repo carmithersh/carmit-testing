@@ -1,0 +1,548 @@
+name: Create Code Review Evidence
+
+on:
+  workflow_dispatch:
+    inputs:
+      application_key:
+        description: 'JFrog application key'
+        required: true
+        default: 'myshop'
+      application_version:
+        description: 'Application version being promoted'
+        required: true
+      stage:
+        description: 'Promotion stage key'
+        required: true
+
+permissions:
+  id-token: write
+  contents: read
+  pull-requests: read
+
+jobs:
+  create-code-review-evidence:
+    runs-on: self-hosted
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup JFrog CLI
+        id: setup-jfrog-cli
+        uses: jfrog/setup-jfrog-cli@v4.9.1
+        env:
+          JF_URL: https://${{ vars.JF_URL }}
+        with:
+          oidc-provider-name: github-carmit-project-1
+
+      - name: Get current application version content
+        env:
+          JF_URL: ${{ vars.JF_URL }}
+          OIDC_TOKEN: ${{ steps.setup-jfrog-cli.outputs.oidc-token }}
+          APP_KEY: ${{ inputs.application_key }}
+          APP_VERSION: ${{ inputs.application_version }}
+        run: |
+          QUERY="query {
+            applications {
+              getApplicationVersion(
+                applicationKey: \"${APP_KEY}\"
+                version: \"${APP_VERSION}\"
+              ) {
+                status
+                releaseStatus
+                releasables {
+                  releasablesConnection {
+                    edges {
+                      node {
+                        name
+                        version
+                        packageType
+                        sha256
+                        releasableType
+                        artifacts {
+                          evidenceSubject {
+                            evidenceConnection(where: {
+                              predicateType: \"https://slsa.dev/provenance/v1\"
+                            }) {
+                              edges {
+                                node {
+                                  predicateType
+                                  predicate
+                                  verified
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }"
+
+          BODY=$(jq -n --arg q "$QUERY" '{query: $q}')
+
+          curl -sf -X POST \
+            "https://${JF_URL}/onemodel/api/v1/graphql" \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer ${OIDC_TOKEN}" \
+            -d "$BODY" -o current_version_response.json
+
+          TOTAL_RELEASABLES=$(jq '[.data.applications.getApplicationVersion.releasables.releasablesConnection.edges[].node] | length' current_version_response.json)
+
+          jq '[
+            .data.applications.getApplicationVersion.releasables.releasablesConnection
+            .edges[].node.artifacts[]?.evidenceSubject.evidenceConnection
+            .edges // [] | .[]?.node
+            .predicate.buildDefinition.resolvedDependencies[]? |
+            { gitCommit: .digest.gitCommit, uri: .uri }
+          ] | unique_by([.uri, .gitCommit])' current_version_response.json > current_commit_info.json
+
+          WITH_EVIDENCE=$(jq 'length' current_commit_info.json)
+          echo "Releasables: ${TOTAL_RELEASABLES} total, ${WITH_EVIDENCE} with SLSA provenance evidence"
+          if [ "$WITH_EVIDENCE" -eq 0 ]; then
+            echo "::warning::No releasables have SLSA provenance evidence — commit range will be empty"
+          fi
+          jq . current_commit_info.json
+
+      - name: Get earliest commit date
+        id: earliest-commit-date
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          echo "Current commit info: "
+          cat current_commit_info.json
+          echo "================================================"
+
+          for uri in $(jq -r '.[] | .uri' current_commit_info.json); do
+            MULTIPLE_COMMITS=$(jq -r --arg uri "$uri" '[.[] | select(.uri == $uri)]' current_commit_info.json | jq 'length')
+            if [ "$MULTIPLE_COMMITS" -gt 1 ]; then
+              echo "URI: $uri has multiple commits"
+            else
+              echo "URI: $uri has single commit"
+              continue
+            fi
+            OBJECTS=$(jq -r --arg uri "$uri" '[.[] | select(.uri == $uri)]' current_commit_info.json)
+            EARLIEST_COMMIT_DATE=""
+            EARLIEST_COMMIT_SHA=""
+            OBJECT_COUNT=$(echo "$OBJECTS" | jq 'length')
+            for i in $(seq 0 $((OBJECT_COUNT - 1))); do
+              object=$(echo "$OBJECTS" | jq -c ".[$i]")
+              CURRENT_SHA=$(echo "$object" | jq -r '.gitCommit')
+              OWNER=$(echo "$uri" | sed 's|git+https://github.com/||' | sed 's|@.*||' | cut -d'/' -f1)
+              REPO=$(echo "$uri" | sed 's|git+https://github.com/||' | sed 's|@.*||' | cut -d'/' -f2)
+              RESPONSE=$(curl -sf \
+                -H "Authorization: Bearer ${GH_TOKEN}" \
+                "https://api.github.com/repos/${OWNER}/${REPO}/commits/${CURRENT_SHA}")
+              COMMIT_DATE=$(echo "$RESPONSE" | jq -r '.commit.author.date')
+              if [ -z "$EARLIEST_COMMIT_DATE" ]; then
+                EARLIEST_COMMIT_DATE="$COMMIT_DATE"
+                EARLIEST_COMMIT_SHA="$CURRENT_SHA"
+              fi
+              if [[ "$COMMIT_DATE" < "$EARLIEST_COMMIT_DATE" ]]; then
+                EARLIEST_COMMIT_DATE="$COMMIT_DATE"
+                EARLIEST_COMMIT_SHA="$CURRENT_SHA"
+              fi
+            done
+            jq --arg uri "${uri}" --arg sha "${EARLIEST_COMMIT_SHA}" \
+              'map(if .uri == $uri then .gitCommit = $sha else . end)' current_commit_info.json > current_commit_info.tmp \
+              && mv current_commit_info.tmp current_commit_info.json
+          done
+
+          jq 'unique_by(.uri)' current_commit_info.json > current_commit_info.tmp \
+            && mv current_commit_info.tmp current_commit_info.json
+
+          echo "Current commit info after replacement:"
+          cat current_commit_info.json
+
+      - name: Get previous application version
+        id: previous-version
+        env:
+          JF_URL: ${{ vars.JF_URL }}
+          OIDC_TOKEN: ${{ steps.setup-jfrog-cli.outputs.oidc-token }}
+          APP_KEY: ${{ inputs.application_key }}
+          APP_VERSION: ${{ inputs.application_version }}
+        run: |
+          QUERY="query {
+            applications {
+              getApplication(key: \"${APP_KEY}\") {
+                versionsConnection(first: 50, orderBy: {field: VERSION, versionSortType: SEMVER, direction: DESC}) {
+                  edges {
+                    node {
+                      version
+                    }
+                  }
+                }
+              }
+            }
+          }"
+
+          BODY=$(jq -n --arg q "$QUERY" '{query: $q}')
+
+          RESPONSE=$(curl -sf -X POST \
+            "https://${JF_URL}/onemodel/api/v1/graphql" \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer ${OIDC_TOKEN}" \
+            -d "$BODY")
+
+          VERSIONS=$(echo "$RESPONSE" | jq -r \
+            '.data.applications.getApplication.versionsConnection.edges[].node.version')
+
+          PREV_VERSION=""
+          FOUND_CURRENT=false
+          while IFS= read -r ver; do
+            if [ "$FOUND_CURRENT" = "true" ]; then
+              PREV_VERSION="$ver"
+              break
+            fi
+            if [ "$ver" = "${APP_VERSION}" ]; then
+              FOUND_CURRENT=true
+            fi
+          done <<< "$VERSIONS"
+
+          if [ -z "$PREV_VERSION" ]; then
+            echo "is_first_version=true" >> "$GITHUB_OUTPUT"
+            echo "previous_version=" >> "$GITHUB_OUTPUT"
+            echo "No previous version found — this is the first version."
+            echo "[]" > prev_commit_info.json
+            exit 0
+          fi
+
+          echo "is_first_version=false" >> "$GITHUB_OUTPUT"
+          echo "previous_version=${PREV_VERSION}" >> "$GITHUB_OUTPUT"
+          echo "Previous version: ${PREV_VERSION}"
+
+          PREV_QUERY="query {
+            applications {
+              getApplicationVersion(
+                applicationKey: \"${APP_KEY}\"
+                version: \"${PREV_VERSION}\"
+              ) {
+                releasables {
+                  releasablesConnection {
+                    edges {
+                      node {
+                        artifacts {
+                          evidenceSubject {
+                            evidenceConnection(where: {
+                              predicateType: \"https://slsa.dev/provenance/v1\"
+                            }) {
+                              edges {
+                                node {
+                                  predicate
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }"
+
+          PREV_BODY=$(jq -n --arg q "$PREV_QUERY" '{query: $q}')
+
+          curl -sf -X POST \
+            "https://${JF_URL}/onemodel/api/v1/graphql" \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer ${OIDC_TOKEN}" \
+            -d "$PREV_BODY" -o prev_version_response.json
+
+          jq '[
+            .data.applications.getApplicationVersion.releasables.releasablesConnection
+            .edges[].node.artifacts[]?.evidenceSubject.evidenceConnection
+            .edges // [] | .[]?.node
+            .predicate.buildDefinition.resolvedDependencies[]? |
+            { gitCommit: .digest.gitCommit, uri: .uri }
+          ] | unique_by([.uri, .gitCommit])' prev_version_response.json > prev_commit_info.json
+
+          echo "Previous version commit info:"
+          jq . prev_commit_info.json
+
+      - name: Get latest commit date
+        id: latest-commit-date
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          echo "Previous version commit info: "
+          cat prev_commit_info.json
+          echo "================================================"
+
+          for uri in $(jq -r '.[] | .uri' prev_commit_info.json); do
+            MULTIPLE_COMMITS=$(jq -r --arg uri "$uri" '[.[] | select(.uri == $uri)]' prev_commit_info.json | jq 'length')
+            if [ "$MULTIPLE_COMMITS" -gt 1 ]; then
+              echo "URI: $uri has multiple commits"
+            else
+              echo "URI: $uri has single commit"
+              continue
+            fi
+            OBJECTS=$(jq -r --arg uri "$uri" '[.[] | select(.uri == $uri)]' prev_commit_info.json)
+            LATEST_COMMIT_DATE=""
+            LATEST_COMMIT_SHA=""
+            OBJECT_COUNT=$(echo "$OBJECTS" | jq 'length')
+            for i in $(seq 0 $((OBJECT_COUNT - 1))); do
+              object=$(echo "$OBJECTS" | jq -c ".[$i]")
+              CURRENT_SHA=$(echo "$object" | jq -r '.gitCommit')
+              OWNER=$(echo "$uri" | sed 's|git+https://github.com/||' | sed 's|@.*||' | cut -d'/' -f1)
+              REPO=$(echo "$uri" | sed 's|git+https://github.com/||' | sed 's|@.*||' | cut -d'/' -f2)
+              RESPONSE=$(curl -sf \
+                -H "Authorization: Bearer ${GH_TOKEN}" \
+                "https://api.github.com/repos/${OWNER}/${REPO}/commits/${CURRENT_SHA}")
+              COMMIT_DATE=$(echo "$RESPONSE" | jq -r '.commit.author.date')
+              if [ -z "$LATEST_COMMIT_DATE" ]; then
+                LATEST_COMMIT_DATE="$COMMIT_DATE"
+                LATEST_COMMIT_SHA="$CURRENT_SHA"
+              fi
+              if [[ "$COMMIT_DATE" > "$LATEST_COMMIT_DATE" ]]; then
+                LATEST_COMMIT_DATE="$COMMIT_DATE"
+                LATEST_COMMIT_SHA="$CURRENT_SHA"
+              fi
+            done
+            jq --arg uri "${uri}" --arg sha "${LATEST_COMMIT_SHA}" \
+              'map(if .uri == $uri then .gitCommit = $sha else . end)' prev_commit_info.json > prev_commit_info.tmp \
+              && mv prev_commit_info.tmp prev_commit_info.json
+          done
+
+          jq 'unique_by(.uri)' prev_commit_info.json > prev_commit_info.tmp \
+            && mv prev_commit_info.tmp prev_commit_info.json
+
+          echo "Previous commit info after replacement:"
+          cat prev_commit_info.json
+
+      - name: Perform GIT diff
+        id: git-diff
+        env:
+          GH_TOKEN: ${{ github.token }}
+          IS_FIRST: ${{ steps.previous-version.outputs.is_first_version }}
+        run: |
+          CURRENT_COMMITS=$(cat current_commit_info.json)
+          PREV_COMMITS=$(cat prev_commit_info.json)
+          COMMIT_RANGES="[]"
+          URI_MESSAGES="[]"
+
+          COUNT=$(echo "$CURRENT_COMMITS" | jq 'length')
+          if [ "$COUNT" -eq 0 ]; then
+            echo "::warning::No SLSA provenance evidence found on any releasable — skipping commit diff"
+            echo "$COMMIT_RANGES" | jq . > commit_ranges.json
+            echo "[]" > uri_messages.json
+            exit 0
+          fi
+
+          for i in $(seq 0 $((COUNT - 1))); do
+            CURRENT_SHA=$(echo "$CURRENT_COMMITS" | jq -r ".[$i].gitCommit")
+            REPO_URI=$(echo "$CURRENT_COMMITS" | jq -r ".[$i].uri")
+            REPO_PATH=$(echo "$REPO_URI" | sed 's|git+https://github.com/||' | sed 's|@.*||')
+            ORG=$(echo "$REPO_PATH" | cut -d'/' -f1)
+            REPO=$(echo "$REPO_PATH" | cut -d'/' -f2)
+
+            PREV_SHA=""
+            if [ "${IS_FIRST}" != "true" ]; then
+              PREV_SHA=$(echo "$PREV_COMMITS" | jq -r --arg uri "$REPO_URI" \
+                '[.[] | select(.uri == $uri)][0].gitCommit // empty')
+            fi
+
+            if [ -z "$PREV_SHA" ]; then
+              echo "No previous commit for ${REPO_URI} — fetching single commit"
+              RESPONSE=$(curl -sf \
+                -H "Authorization: Bearer ${GH_TOKEN}" \
+                "https://api.github.com/repos/${ORG}/${REPO}/commits/${CURRENT_SHA}")
+              COMMITS_JSON=$(echo "$RESPONSE" | jq '[{ sha: .sha, message: .commit.message }]')
+            else
+              RESPONSE=$(curl -sf \
+                -H "Authorization: Bearer ${GH_TOKEN}" \
+                "https://api.github.com/repos/${ORG}/${REPO}/compare/${PREV_SHA}...${CURRENT_SHA}")
+              COMMITS_JSON=$(echo "$RESPONSE" | jq '[
+                (if .base_commit then { sha: .base_commit.sha, message: .base_commit.commit.message } else empty end),
+                (if .merge_base_commit then { sha: .merge_base_commit.sha, message: .merge_base_commit.commit.message } else empty end),
+                (.commits[]? | { sha: .sha, message: .commit.message })
+              ] | unique_by(.sha)')
+            fi
+
+            URI_MESSAGES=$(echo "$URI_MESSAGES" | jq \
+              --arg uri "$REPO_URI" \
+              --argjson commits "$COMMITS_JSON" \
+              '. + [{ uri: $uri, commits: $commits }]')
+
+            COMMIT_RANGES=$(echo "$COMMIT_RANGES" | jq \
+              --arg repo "$REPO_URI" \
+              --arg prev "${PREV_SHA:-}" \
+              --arg curr "$CURRENT_SHA" \
+              '. + [{ repository: $repo, previousCommit: $prev, currentCommit: $curr }]')
+          done
+
+          echo "$COMMIT_RANGES" | jq . > commit_ranges.json
+          echo "$URI_MESSAGES" | jq . > uri_messages.json
+
+          echo "Commit ranges:"
+          jq . commit_ranges.json
+
+      - name: Collect commit details and PR approvals
+        id: collect-commit-details
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          COMMITS_DATA="[]"
+
+          COUNT=$(jq 'length' uri_messages.json)
+          for i in $(seq 0 $((COUNT - 1))); do
+            URI=$(jq -r ".[$i].uri" uri_messages.json)
+            REPO_PATH=$(echo "$URI" | sed 's|git+https://github.com/||' | sed 's|@.*||')
+            ORG=$(echo "$REPO_PATH" | cut -d'/' -f1)
+            REPO=$(echo "$REPO_PATH" | cut -d'/' -f2)
+
+            COMMIT_COUNT=$(jq ".[$i].commits | length" uri_messages.json)
+            for j in $(seq 0 $((COMMIT_COUNT - 1))); do
+              SHA=$(jq -r ".[$i].commits[$j].sha" uri_messages.json)
+
+              echo "Processing commit ${SHA} in ${ORG}/${REPO}"
+
+              COMMIT_RESPONSE=$(curl -sf \
+                -H "Authorization: Bearer ${GH_TOKEN}" \
+                -H "Accept: application/vnd.github+json" \
+                "https://api.github.com/repos/${ORG}/${REPO}/commits/${SHA}")
+
+              AUTHOR_NAME=$(echo "$COMMIT_RESPONSE" | jq -r '.commit.author.name // ""')
+              AUTHOR_EMAIL=$(echo "$COMMIT_RESPONSE" | jq -r '.commit.author.email // ""')
+              AUTHOR_DATE=$(echo "$COMMIT_RESPONSE" | jq -r '.commit.author.date // ""')
+              COMMITTER_NAME=$(echo "$COMMIT_RESPONSE" | jq -r '.commit.committer.name // ""')
+              COMMITTER_EMAIL=$(echo "$COMMIT_RESPONSE" | jq -r '.commit.committer.email // ""')
+              COMMITTER_DATE=$(echo "$COMMIT_RESPONSE" | jq -r '.commit.committer.date // ""')
+              COMMIT_MESSAGE=$(echo "$COMMIT_RESPONSE" | jq -r '.commit.message // ""')
+              GITHUB_AUTHOR_LOGIN=$(echo "$COMMIT_RESPONSE" | jq -r '.author.login // ""')
+              GITHUB_COMMITTER_LOGIN=$(echo "$COMMIT_RESPONSE" | jq -r '.committer.login // ""')
+
+              PR_RESPONSE=$(curl -sf \
+                -H "Authorization: Bearer ${GH_TOKEN}" \
+                -H "Accept: application/vnd.github+json" \
+                "https://api.github.com/repos/${ORG}/${REPO}/commits/${SHA}/pulls")
+
+              PRS_DATA="[]"
+              PR_COUNT=$(echo "$PR_RESPONSE" | jq 'if type == "array" then length else 0 end')
+
+              for k in $(seq 0 $((PR_COUNT - 1))); do
+                PR_NUMBER=$(echo "$PR_RESPONSE" | jq -r ".[$k].number")
+                PR_TITLE=$(echo "$PR_RESPONSE" | jq -r ".[$k].title // \"\"")
+                PR_STATE=$(echo "$PR_RESPONSE" | jq -r ".[$k].state // \"\"")
+                PR_MERGED_AT=$(echo "$PR_RESPONSE" | jq -r ".[$k].merged_at // \"\"")
+                PR_AUTHOR=$(echo "$PR_RESPONSE" | jq -r ".[$k].user.login // \"\"")
+
+                echo "  Fetching reviews for PR #${PR_NUMBER}"
+
+                REVIEWS_RESPONSE=$(curl -sf \
+                  -H "Authorization: Bearer ${GH_TOKEN}" \
+                  -H "Accept: application/vnd.github+json" \
+                  "https://api.github.com/repos/${ORG}/${REPO}/pulls/${PR_NUMBER}/reviews")
+
+                REVIEWS_DATA=$(echo "$REVIEWS_RESPONSE" | jq '[.[] | {
+                  reviewer: .user.login,
+                  state: .state,
+                  submittedAt: .submitted_at,
+                  body: .body
+                }]')
+
+                APPROVAL_COUNT=$(echo "$REVIEWS_DATA" | jq '[.[] | select(.state == "APPROVED")] | length')
+                echo "  PR #${PR_NUMBER}: ${APPROVAL_COUNT} approval(s)"
+
+                PRS_DATA=$(echo "$PRS_DATA" | jq \
+                  --argjson number "$PR_NUMBER" \
+                  --arg title "$PR_TITLE" \
+                  --arg state "$PR_STATE" \
+                  --arg mergedAt "$PR_MERGED_AT" \
+                  --arg author "$PR_AUTHOR" \
+                  --argjson reviews "$REVIEWS_DATA" \
+                  '. + [{
+                    number: $number,
+                    title: $title,
+                    state: $state,
+                    mergedAt: $mergedAt,
+                    author: $author,
+                    reviews: $reviews
+                  }]')
+              done
+
+              COMMITS_DATA=$(echo "$COMMITS_DATA" | jq \
+                --arg sha "$SHA" \
+                --arg message "$COMMIT_MESSAGE" \
+                --arg uri "$URI" \
+                --arg authorName "$AUTHOR_NAME" \
+                --arg authorEmail "$AUTHOR_EMAIL" \
+                --arg authorDate "$AUTHOR_DATE" \
+                --arg authorLogin "$GITHUB_AUTHOR_LOGIN" \
+                --arg committerName "$COMMITTER_NAME" \
+                --arg committerEmail "$COMMITTER_EMAIL" \
+                --arg committerDate "$COMMITTER_DATE" \
+                --arg committerLogin "$GITHUB_COMMITTER_LOGIN" \
+                --argjson pullRequests "$PRS_DATA" \
+                '. + [{
+                  sha: $sha,
+                  message: $message,
+                  repository: $uri,
+                  author: {
+                    name: $authorName,
+                    email: $authorEmail,
+                    login: $authorLogin,
+                    date: $authorDate
+                  },
+                  committer: {
+                    name: $committerName,
+                    email: $committerEmail,
+                    login: $committerLogin,
+                    date: $committerDate
+                  },
+                  pullRequests: $pullRequests
+                }]')
+            done
+          done
+
+          echo "$COMMITS_DATA" | jq . > commits_data.json
+          echo "Commits with review data:"
+          jq . commits_data.json
+
+          TOTAL_COMMITS=$(jq 'length' commits_data.json)
+          COMMITS_WITH_PRS=$(jq '[.[] | select(.pullRequests | length > 0)] | length' commits_data.json)
+          COMMITS_WITH_APPROVALS=$(jq '[.[] | select(.pullRequests[].reviews[]? | select(.state == "APPROVED"))] | length' commits_data.json)
+          echo "Summary: ${TOTAL_COMMITS} commits, ${COMMITS_WITH_PRS} with PRs, ${COMMITS_WITH_APPROVALS} with at least one approval"
+
+      - name: Build evidence predicate
+        env:
+          APP_KEY: ${{ inputs.application_key }}
+          APP_VERSION: ${{ inputs.application_version }}
+          PREV_VERSION: ${{ steps.previous-version.outputs.previous_version }}
+          STAGE: ${{ inputs.stage }}
+        run: |
+          jq -n \
+            --arg app_key "${APP_KEY}" \
+            --arg app_version "${APP_VERSION}" \
+            --arg prev_version "${PREV_VERSION}" \
+            --arg stage "${STAGE}" \
+            --slurpfile commit_ranges commit_ranges.json \
+            --slurpfile commits commits_data.json \
+            '{
+              applicationKey: $app_key,
+              applicationVersion: $app_version,
+              previousApplicationVersion: $prev_version,
+              stage: $stage,
+              commitRange: $commit_ranges[0],
+              commits: $commits[0]
+            }' > code-review-evidence.json
+
+          echo "Evidence predicate:"
+          jq . code-review-evidence.json
+
+      - name: Create evidence on application version
+        env:
+          APP_KEY: ${{ inputs.application_key }}
+          APP_VERSION: ${{ inputs.application_version }}
+          EVIDENCE_SIGNING_KEY: ${{ secrets.EVIDENCE_SIGNING_KEY }}
+        run: |
+          jf evd create \
+            --predicate-type "https://jfrog.com/evidence/code-review/v1" \
+            --predicate code-review-evidence.json \
+            --application-key "${APP_KEY}" \
+            --application-version "${APP_VERSION}" \
+            --key-alias "snow2" \
+            --key "${EVIDENCE_SIGNING_KEY}"
