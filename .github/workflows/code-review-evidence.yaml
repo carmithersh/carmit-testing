@@ -431,8 +431,8 @@ jobs:
                 PR_AUTHOR=$(echo "$PR_RESPONSE" | jq -r ".[$k].user.login // \"\"")
 
                 echo "  Fetching reviews for PR #${PR_NUMBER}"
-                # if PR_NUMBER is empty, add into Commits Data as a PR with no reviews, and skip to the next commit
-                if [ -z "$PR_NUMBER" ]; then
+                # if PR_NUMBER is empty of null, add into Commits Data as a PR with no reviews, and skip to the next commit
+                if [ -z "$PR_NUMBER" ] || [ "$PR_NUMBER" = "null" ]; then
                   PRS_DATA=$(echo "$PRS_DATA" | jq '. + [{ number: "", title: "", state: "", mergedAt: "", author: "", reviews: [] }]')
                   continue
                 fi
