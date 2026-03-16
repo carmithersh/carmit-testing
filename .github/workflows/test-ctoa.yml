@@ -108,7 +108,7 @@ jobs:
                 # Attach evidence onto docker package using JFrog CLI                
                 jf evd create \
                 --integration sonar \
-                --package-repo-name  "pac-ai-generator-docker-local"  \ 
+                --package-repo-name  "pac-ai-generator-docker-local"  \
                 --package-name "skills-jfrog-testing" \
                 --package-version "${{ github.run_number }}" \
                 --project "pac-ai-generator" \
