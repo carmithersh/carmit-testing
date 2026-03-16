@@ -20,7 +20,7 @@ jobs:
               
             - name: Setup JFrog CLI
               id: setup-cli
-              uses: jfrog/setup-jfrog-cli@v4
+              uses: jfrog/setup-jfrog-cli@v4.9.1
               env: 
                 JF_URL: https://${{ vars.CTOA_JF_URL }}/
                 JF_PROJECT: pac-ai-generator
