@@ -431,7 +431,12 @@ jobs:
                 PR_AUTHOR=$(echo "$PR_RESPONSE" | jq -r ".[$k].user.login // \"\"")
 
                 echo "  Fetching reviews for PR #${PR_NUMBER}"
-
+                # if PR_NUMBER is empty, add into Commits Data as a PR with no reviews, and skip to the next commit
+                if [ -z "$PR_NUMBER" ]; then
+                  PRS_DATA=$(echo "$PRS_DATA" | jq '. + [{ number: "", title: "", state: "", mergedAt: "", author: "", reviews: [] }]')
+                  continue
+                fi
+                
                 REVIEWS_RESPONSE=$(curl -sf \
                   -H "Authorization: Bearer ${GH_TOKEN}" \
                   -H "Accept: application/vnd.github+json" \
