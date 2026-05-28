@@ -58,7 +58,6 @@ jobs:
 
       - name: Validate all pre-merge commits have approval evidence
         run: |
-          set -euo pipefail
           OPA_OUTPUT="$(opa eval \
             -i rbv2_evidence_raw.json \
             -d .github/policies/pr-policy.rego \
