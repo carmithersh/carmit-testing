@@ -50,7 +50,7 @@ jobs:
           jf evd get-evidence \
             --release-bundle "${RBV2_NAME}" \
             --release-bundle-version "${RBV2_VERSION}" \
-            --project "${PROJECT_KEY}" > rbv2_evidence_raw.json
+            --project "${PROJECT_KEY}" > rbv2_evidence_raw.json --include-predicate
           echo "Fetched release bundle evidence metadata"
       - name: Print release bundle evidence
         run: |
