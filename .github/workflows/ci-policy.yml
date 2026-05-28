@@ -32,7 +32,7 @@ jobs:
         uses: jfrog/setup-jfrog-cli@v4.9.1
         env: 
           JF_URL: https://${{ vars.CTOA_JF_URL }}/
-          JF_PROJECT: pac-ai-generator
+          JF_PROJECT: pr-review
 
       - name: Setup OPA
         uses: open-policy-agent/setup-opa@v2
