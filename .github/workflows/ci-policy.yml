@@ -1,0 +1,81 @@
+name: CI Policy Evaluation (non opa)
+
+on:
+  workflow_dispatch:
+    inputs:
+      project_key:
+        description: 'JFrog project key'
+        required: true
+        default: 'pr-review'
+      rbv2_name:
+        description: 'Release bundle v2 name'
+        required: true
+        default: 'rbv2-demo'
+      rbv2_version:
+        description: 'Release bundle version'
+        required: true
+        default: '1.0.2'
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  evaluate-evidence:
+    runs-on: cto-dind-amd-scale-set
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup JFrog CLI
+        id: setup-cli
+        uses: jfrog/setup-jfrog-cli@v4.9.1
+        env: 
+          JF_URL: https://${{ vars.CTOA_JF_URL }}/
+          JF_PROJECT: pac-ai-generator
+
+      - name: Setup OPA
+        uses: open-policy-agent/setup-opa@v2
+        with:
+          version: latest
+
+      - name: Fetch release bundle evidence
+        env:
+          PROJECT_KEY: ${{ inputs.project_key }}
+          RBV2_NAME: ${{ inputs.rbv2_name }}
+          RBV2_VERSION: ${{ inputs.rbv2_version }}
+        run: |
+          set -euo pipefail
+          jf evd get-evidence \
+            --release-bundle "${RBV2_NAME}" \
+            --release-bundle-version "${RBV2_VERSION}" \
+            --project "${PROJECT_KEY}" > rbv2_evidence_raw.json
+          echo "Fetched release bundle evidence metadata"
+      - name: Print release bundle evidence
+        run: |
+          cat rbv2_evidence_raw.json
+
+      - name: Validate all pre-merge commits have approval evidence
+        run: |
+          set -euo pipefail
+          OPA_OUTPUT="$(opa eval \
+            -i rbv2_evidence_raw.json \
+            -d .github/policies/pr-policy.rego \
+            --format json \
+            'data.pr.policy.result')"
+
+          echo "${OPA_OUTPUT}" | jq .
+
+          ALLOW="$(echo "${OPA_OUTPUT}" | jq -r '.result[0].expressions[0].value.allow')"
+          MESSAGE="$(echo "${OPA_OUTPUT}" | jq -r '.result[0].expressions[0].value.message')"
+          MISSING="$(echo "${OPA_OUTPUT}" | jq -r '.result[0].expressions[0].value.missing_pre_merge_commits | join(", ")')"
+
+          if [ "${ALLOW}" != "true" ]; then
+            echo "OPA validation failed: ${MESSAGE}"
+            if [ -n "${MISSING}" ]; then
+              echo "Missing pre-merge commits: ${MISSING}"
+            fi
+            exit 1
+          fi
+
+          echo "OPA validation passed: ${MESSAGE}"
