@@ -58,24 +58,19 @@ jobs:
 
       - name: Validate all pre-merge commits have approval evidence
         run: |
-          OPA_OUTPUT="$(opa eval \
-            -i rbv2_evidence_raw.json \
-            -d .github/policies/pr-policy.rego \
-            --format json \
-            'data.pr.policy.result')"
+          RESULT=$(opa eval -i rbv2_evidence_raw.json -d .github/policies/pr-policy.rego "data.evidence.policy.result" --format json)
+          echo "OPA Result: $RESULT"
+          
+          ALLOW=$(echo "$RESULT" | jq -r '.result[0].expressions[0].value.allow')
+          MESSAGE=$(echo "$RESULT" | jq -r '.result[0].expressions[0].value.message // "No message"')
+          MISSING=$(echo "$RESULT" | jq -r '.result[0].expressions[0].value.missing // []')
 
-          echo "${OPA_OUTPUT}" | jq .
+          echo "OPA Result: allow=$ALLOW, message=$MESSAGE"
 
-          ALLOW="$(echo "${OPA_OUTPUT}" | jq -r '.result[0].expressions[0].value.allow')"
-          MESSAGE="$(echo "${OPA_OUTPUT}" | jq -r '.result[0].expressions[0].value.message')"
-          MISSING="$(echo "${OPA_OUTPUT}" | jq -r '.result[0].expressions[0].value.missing_pre_merge_commits | join(", ")')"
-
-          if [ "${ALLOW}" != "true" ]; then
-            echo "OPA validation failed: ${MESSAGE}"
-            if [ -n "${MISSING}" ]; then
-              echo "Missing pre-merge commits: ${MISSING}"
-            fi
+          if [ "$ALLOW" != "true" ]; then
+            echo "::error::Evidence policy check failed: $MESSAGE"
+            echo "Missing evidence types: $MISSING"
             exit 1
           fi
 
-          echo "OPA validation passed: ${MESSAGE}"
+          echo "Evidence policy check passed"

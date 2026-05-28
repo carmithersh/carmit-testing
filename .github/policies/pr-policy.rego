@@ -25,7 +25,7 @@ approved_pre_merge_commits := {commit_id |
 	valid_evidence_payload(object.get(approval, "evidence", ""))
 }
 
-missing_pre_merge_commits := sorted([commit_id |
+missing_pre_merge_commits := sort([commit_id |
 	commit_id := required_pre_merge_commits[_]
 	not commit_id in approved_pre_merge_commits
 ])
