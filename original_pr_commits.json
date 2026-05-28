@@ -1,0 +1,16 @@
+{
+  "JFROG/code-review-poc": [
+    {
+      "commits": [
+        {
+          "merge_commit": "7530f5e4650386f9615c244eeed6b660355d26d9",
+          "pre_merge_commit": "494f1f2d092fcf271333889654d75e2e7b9ce1df"
+        },
+        {
+          "merge_commit": "c8f3093ed505a2ce2ebc0da49b5acd5907381c2d",
+          "pre_merge_commit": "912b0bcb567aaeb7ca9cbebe782a5c993166c8ab"
+        }
+      ]
+    }
+  ]
+}

@@ -3,12 +3,12 @@ package pr.policy
 import rego.v1
 
 # Find repo entry objects regardless of where they are nested in input.
-# A repo entry is expected to contain both commits and agents_approvals arrays.
+# A repo entry is expected to contain both commits and agents_reviews arrays.
 repo_entries := [entry |
 	some path, candidate in walk(input)
 	is_object(candidate)
 	commits := object.get(candidate, "commits", null)
-	approvals := object.get(candidate, "agents_approvals", null)
+	approvals := object.get(candidate, "agents_reviews", null)
 	is_array(commits)
 	is_array(approvals)
 	entry := candidate
@@ -25,7 +25,7 @@ required_pre_merge_commits := {commit_id |
 # Pre-merge commits that have at least one valid approvals evidence object.
 approved_pre_merge_commits := {commit_id |
 	some entry in repo_entries
-	some approval in object.get(entry, "agents_approvals", [])
+	some approval in object.get(entry, "agents_reviews", [])
 	commit_id := object.get(approval, "pre_merge_commit", "")
 	commit_id != ""
 	valid_evidence_payload(object.get(approval, "evidence", ""))
@@ -45,7 +45,7 @@ default result := {
 result := {
 	"allow": false,
 	"missing_pre_merge_commits": missing_pre_merge_commits,
-	"message": sprintf("missing valid agents_approvals.evidence for pre-merge commits: %s", [concat(", ", missing_pre_merge_commits)]),
+	"message": sprintf("missing valid agents_reviews.evidence for pre-merge commits: %s", [concat(", ", missing_pre_merge_commits)]),
 } if {
 	count(required_pre_merge_commits) > 0
 	count(missing_pre_merge_commits) > 0
@@ -54,7 +54,7 @@ result := {
 result := {
 	"allow": true,
 	"missing_pre_merge_commits": [],
-	"message": "all pre-merge commits have valid agents_approvals.evidence",
+	"message": "all pre-merge commits have valid agents_reviews.evidence",
 } if {
 	count(required_pre_merge_commits) > 0
 	count(missing_pre_merge_commits) == 0
