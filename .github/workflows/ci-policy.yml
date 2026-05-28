@@ -33,6 +33,8 @@ jobs:
         env: 
           JF_URL: https://${{ vars.CTOA_JF_URL }}/
           JF_PROJECT: pr-review
+        with:
+          oidc-provider-name: github-carmit-project-1
 
       - name: Setup OPA
         uses: open-policy-agent/setup-opa@v2
