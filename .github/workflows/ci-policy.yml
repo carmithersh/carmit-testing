@@ -58,7 +58,7 @@ jobs:
 
       - name: Validate all pre-merge commits have approval evidence
         run: |
-          RESULT=$(opa eval -i rbv2_evidence_raw.json -d .github/policies/pr-policy.rego "data.pr.policy" --format json)
+          RESULT=$(opa eval -i rbv2_evidence_raw.json -d .github/policies/pr-policy.rego "data.pr.policy.result" --format json)
           echo "OPA Result: $RESULT"
 
           ALLOW=$(echo "$RESULT" | jq -r '.result[0].expressions[0].value.allow')
