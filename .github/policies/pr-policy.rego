@@ -2,10 +2,16 @@ package pr.policy
 
 import rego.v1
 
-# Flatten all objects under each repository key.
+# Find repo entry objects regardless of where they are nested in input.
+# A repo entry is expected to contain both commits and agents_approvals arrays.
 repo_entries := [entry |
-	some repo_key in object.keys(input)
-	some entry in input[repo_key]
+	some path, candidate in walk(input)
+	is_object(candidate)
+	commits := object.get(candidate, "commits", null)
+	approvals := object.get(candidate, "agents_approvals", null)
+	is_array(commits)
+	is_array(approvals)
+	entry := candidate
 ]
 
 # All pre-merge commits that must be covered by approvals evidence.
