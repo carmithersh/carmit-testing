@@ -1,4 +1,4 @@
-name: CI Policy Evaluation (non opa)
+name: CI Policy Evaluation
 
 on:
   workflow_dispatch:
@@ -22,7 +22,7 @@ permissions:
 
 jobs:
   evaluate-evidence:
-    runs-on: cto-dind-amd-scale-set
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
