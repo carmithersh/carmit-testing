@@ -1,16 +1,27 @@
 {
-  "JFROG/code-review-poc": [
-    {
-      "commits": [
-        {
-          "merge_commit": "7530f5e4650386f9615c244eeed6b660355d26d9",
-          "pre_merge_commit": "494f1f2d092fcf271333889654d75e2e7b9ce1df"
-        },
-        {
-          "merge_commit": "c8f3093ed505a2ce2ebc0da49b5acd5907381c2d",
-          "pre_merge_commit": "912b0bcb567aaeb7ca9cbebe782a5c993166c8ab"
-        }
-      ]
-    }
-  ]
+  "JFROG/code-review-poc": {
+    "commits": [
+      {
+        "merge_commit": "0dab11dcf8499ff47a5b876714e9ca3a5e5c0963",
+        "pre_merge_commit": "a940f4bfeb56e7110c6ed5bd137e1fba3f71fb62",
+        "approvers": []
+      },
+      {
+        "merge_commit": "272670768d6bb4c9f78c9e0fda47a314f087da3e",
+        "pre_merge_commit": "4b0947f6f9eb145a9c554238fa87c8a02de46f04",
+        "approvers": []
+      },
+      {
+        "merge_commit": "431def227fd9d557cbeed2c675563040bfc5732b",
+        "pre_merge_commit": "3479c0e39f61d50eb36e36fa6399629dda2caf13",
+        "approvers": []
+      },
+      {
+        "merge_commit": "7215c3d28ca2b085d4f820615b05693b10a10113",
+        "pre_merge_commit": "d16beaffd87d0731d41310458c04a3e268ab15d9",
+        "approvers": []
+      }
+    ],
+    "agents_reviews": []
+  }
 }

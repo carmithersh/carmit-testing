@@ -1,0 +1,162 @@
+ {
+  "schemaVersion": "1.0",
+  "type": "artifact",
+  "result": {
+    "subjectRepoPath": "pr-review-external-evidence/code-review-poc/885e255a2146f2d652912997a12eece5847ac07c.json",
+    "evidence": [
+      {
+        "predicateSlug": "code-review",
+        "predicateType": "https://jfrog.com/evidence/code-review/v1",
+        "downloadPath": "pr-review-external-evidence/.evidence/6636939fd1bd1fbc706d18c3c0a841c13bccc29a826962bda0603b63d213f417/c0c5f99c14f0083f43e4d7f106e2c0dbdc8a4284e7c69d1135dae6765030117e/code-review-1779980063442-4eb5d965.json",
+        "verified": true,
+        "signingKey": {
+          "alias": "evd-key-20260514-153518"
+        },
+        "subject": {
+          "sha256": "c0c5f99c14f0083f43e4d7f106e2c0dbdc8a4284e7c69d1135dae6765030117e"
+        },
+        "createdBy": "carmith@jfrog.com",
+        "createdAt": "2026-05-28T14:54:22.503Z",
+        "predicate": {
+          "agent": {
+            "agentName": "cursor-cli",
+            "version": "2026.03.20-44cb435"
+          },
+          "base-commit": {
+            "digest": {
+              "gitCommit": "272670768d6bb4c9f78c9e0fda47a314f087da3e"
+            },
+            "name": "git+https://github.jfrog.info/JFROG/code-review-poc@refs/heads/master"
+          },
+          "chatContext": "",
+          "context": "",
+          "devPolicies": [],
+          "llm": "sonnet-4",
+          "rationale": "The PR lacks test coverage for critical CI/CD components and contains a hardcoded personal access token in workflow files. While the private key is documented as acceptable for this PoC, the missing tests and credential management issues warrant reservation.",
+          "requirements": [],
+          "review": {
+            "comments": [
+              {
+                "description": "The workflow uses a hardcoded personal access token 'CARMIT_PAT' for GitHub API calls. This creates a dependency on a specific user's token and may not be sustainable for production use.",
+                "evidence": "-H \"Authorization: *** secrets.CARMIT_PAT }}\"",
+                "file": ".github/workflows/pr-agent-cursor-review.yml",
+                "id": 1,
+                "line": 194,
+                "severity": "CODE_SMELL",
+                "title": "Hardcoded personal access token in workflow"
+              },
+              {
+                "description": "The error check for GraphQL response only validates HTTP status code and data.error field, but doesn't handle cases where the response structure is malformed or missing expected fields.",
+                "evidence": "if [ \"$STATUS_CODE\" -ne 200 ]; then\n  echo \"Error: Failed to fetch rbv2 version response \"\n  exit 1\nfi\n# check inside rbv2_version_response.json that data.error is null \nERROR=$(jq -r '.data.error' rbv2_version_response.json)\nif [ \"$ERROR\" != \"null\" ]; then\n  echo \"Error: Failed to fetch rbv2 version response $ERROR\"\n  exit 1\nfi",
+                "file": ".github/actions/rbv2-fetch-version-commit-info/action.yml",
+                "id": 2,
+                "line": 75,
+                "severity": "CODE_SMELL",
+                "title": "Insufficient error handling in GraphQL response"
+              }
+            ],
+            "files_reviewed": 30,
+            "head_sha": "885e255a2146f2d652912997a12eece5847ac07c",
+            "pr_number": 32,
+            "rationale": "The PR lacks test coverage for critical CI/CD components and contains a hardcoded personal access token in workflow files. While the private key is documented as acceptable for this PoC, the missing tests and credential management issues warrant reservation.",
+            "repository": "JFROG/code-review-poc",
+            "tasks": [
+              {
+                "category": "TEST_COVERAGE",
+                "description": "Add comprehensive test coverage for critical CI/CD workflows and GitHub Actions, particularly for evidence creation and signing processes",
+                "file": null,
+                "id": 1
+              },
+              {
+                "category": "REFACTOR",
+                "description": "Replace hardcoded personal access token with a more generic service account or organization token for better maintainability",
+                "file": ".github/workflows/pr-agent-cursor-review.yml",
+                "id": 2
+              },
+              {
+                "category": "REFACTOR",
+                "description": "Enhance error handling to validate GraphQL response structure and handle edge cases more robustly",
+                "file": ".github/actions/rbv2-fetch-version-commit-info/action.yml",
+                "id": 3
+              }
+            ],
+            "verdict": "WithReservation"
+          },
+          "tools": [
+            "checkout",
+            "read",
+            "code-review"
+          ],
+          "verdict": "WithReservation"
+        }
+      },
+      {
+        "predicateSlug": "code-review",
+        "predicateType": "https://jfrog.com/evidence/code-review/v1",
+        "downloadPath": "pr-review-external-evidence/.evidence/6636939fd1bd1fbc706d18c3c0a841c13bccc29a826962bda0603b63d213f417/c0c5f99c14f0083f43e4d7f106e2c0dbdc8a4284e7c69d1135dae6765030117e/code-review-1779981220327-095839fb.json",
+        "verified": true,
+        "signingKey": {
+          "alias": "evd-key-20260514-153518"
+        },
+        "subject": {
+          "sha256": "c0c5f99c14f0083f43e4d7f106e2c0dbdc8a4284e7c69d1135dae6765030117e"
+        },
+        "createdBy": "carmith@jfrog.com",
+        "createdAt": "2026-05-28T15:13:39.389Z",
+        "predicate": {
+          "agent": {
+            "agentName": "cursor-cli",
+            "version": "2026.03.20-44cb435"
+          },
+          "base-commit": {
+            "digest": {
+              "gitCommit": "74a794ca9e925e24074fd710d050a9645e7d0012"
+            },
+            "name": "git+https://github.jfrog.info/JFROG/code-review-poc@refs/heads/master"
+          },
+          "chatContext": "",
+          "context": "",
+          "devPolicies": [],
+          "llm": "sonnet-4",
+          "rationale": "The PR contains minor issues including a typo in a comment and commented-out error handling, but no critical blocking issues were found.",
+          "requirements": [],
+          "review": {
+            "comments": [
+              {
+                "description": "Comment contains a spelling error: 'reposiotry' should be 'repository'",
+                "evidence": "          # extract the reposiotry name from owner/repo format",
+                "file": ".github/actions/collect-pr-approval-evidence/action.yml",
+                "id": 1,
+                "line": 48,
+                "severity": "CLEANUP",
+                "title": "Typo in comment"
+              },
+              {
+                "description": "The error handling directive 'set -euo pipefail' is commented out, which contradicts the architecture guidelines that require proper error handling with 'bash -uo pipefail'",
+                "evidence": "        # set -euo pipefail",
+                "file": ".github/actions/collect-pr-approval-evidence/action.yml",
+                "id": 2,
+                "line": 44,
+                "severity": "CODE_SMELL",
+                "title": "Commented-out error handling"
+              }
+            ],
+            "files_reviewed": 30,
+            "head_sha": "885e255a2146f2d652912997a12eece5847ac07c",
+            "pr_number": 33,
+            "rationale": "The PR contains minor issues including a typo in a comment and commented-out error handling, but no critical blocking issues were found.",
+            "repository": "JFROG/code-review-poc",
+            "tasks": [],
+            "verdict": "WithReservation"
+          },
+          "tools": [
+            "checkout",
+            "read",
+            "code-review"
+          ],
+          "verdict": "WithReservation"
+        }
+      }
+    ]
+  }
+}

@@ -44,6 +44,98 @@
             }
           ]
         }
+      },
+      {
+        "predicateSlug": "ai-code-review",
+        "predicateType": "https://jfrog.com/evidence/ai-code-review/v1",
+        "downloadPath": "pr-review-release-bundles-v2/.evidence/7a291d6895e296179d869c8ca975e5481f2f1b408cf45728ea5721cb62238db0/504251d5f27fe433aa827f7c5cff49a2bcac14d75c6bf34cdb806dc4650ae3b7/ai-code-review-1779972005902-05fa76e6.json",
+        "verified": true,
+        "signingKey": {
+          "alias": "evd-key-20260514-153518"
+        },
+        "subject": {
+          "sha256": "504251d5f27fe433aa827f7c5cff49a2bcac14d75c6bf34cdb806dc4650ae3b7"
+        },
+        "createdBy": "carmith@jfrog.com",
+        "createdAt": "2026-05-28T12:40:05.118Z",
+        "predicate": {
+          "JFROG/code-review-poc": [
+            {
+              "agents_approvals": [
+                {
+                  "evidence": {
+                    "result": {
+                      "evidence": [
+                        {
+                          "createdAt": "2026-05-28T07:22:10.855Z",
+                          "createdBy": "carmith@jfrog.com",
+                          "downloadPath": "pr-review-external-evidence/.evidence/f01dc648e0b2f0ba71f5fd29c506b323dd5f0e6a781163854001a12f43ee0e10/2ab3131431df51781a4cc633fc911dfb1ebd419237fca0f2a6779514dcc741fa/code-review-1779952931721-c56c6b4d.json",
+                          "predicateSlug": "code-review",
+                          "predicateType": "https://jfrog.com/evidence/code-review/v1",
+                          "signingKey": {
+                            "alias": "evd-key-20260514-153518"
+                          },
+                          "subject": {
+                            "sha256": "2ab3131431df51781a4cc633fc911dfb1ebd419237fca0f2a6779514dcc741fa"
+                          },
+                          "verified": true
+                        }
+                      ],
+                      "subjectRepoPath": "pr-review-external-evidence/code-review-poc/494f1f2d092fcf271333889654d75e2e7b9ce1df.json"
+                    },
+                    "schemaVersion": "1.0",
+                    "type": "artifact"
+                  },
+                  "pre_merge_commit": "494f1f2d092fcf271333889654d75e2e7b9ce1df"
+                },
+                {
+                  "evidence": {
+                    "result": {
+                      "evidence": [
+                        {
+                          "createdAt": "2026-05-28T06:31:59.427Z",
+                          "createdBy": "carmith@jfrog.com",
+                          "downloadPath": "pr-review-external-evidence/.evidence/798697b18d895a31599ba616cc0be2c7287a7a14ee070e76c7998bf9422c22b0/02f64d778f37fa17a994f3f7f3a20b2a2462ac776dc5f3f7efe9f9bf34675108/code-review-1779949920311-421fcbaa.json",
+                          "predicateSlug": "code-review",
+                          "predicateType": "https://jfrog.com/evidence/code-review/v1",
+                          "signingKey": {
+                            "alias": "evd-key-20260514-153518"
+                          },
+                          "subject": {
+                            "sha256": "02f64d778f37fa17a994f3f7f3a20b2a2462ac776dc5f3f7efe9f9bf34675108"
+                          },
+                          "verified": true
+                        }
+                      ],
+                      "subjectRepoPath": "pr-review-external-evidence/code-review-poc/912b0bcb567aaeb7ca9cbebe782a5c993166c8ab.json"
+                    },
+                    "schemaVersion": "1.0",
+                    "type": "artifact"
+                  },
+                  "pre_merge_commit": "912b0bcb567aaeb7ca9cbebe782a5c993166c8ab"
+                }
+              ],
+              "commits": [
+                {
+                  "approvers": [],
+                  "merge_commit": "7530f5e4650386f9615c244eeed6b660355d26d9",
+                  "pre_merge_commit": "494f1f2d092fcf271333889654d75e2e7b9ce1df"
+                },
+                {
+                  "approvers": [
+                    {
+                      "body": "",
+                      "login": "yuvalk",
+                      "submitted_at": "2026-05-28T06:20:39Z"
+                    }
+                  ],
+                  "merge_commit": "c8f3093ed505a2ce2ebc0da49b5acd5907381c2d",
+                  "pre_merge_commit": "912b0bcb567aaeb7ca9cbebe782a5c993166c8ab"
+                }
+              ]
+            }
+          ]
+        }
       }
     ]
   }
