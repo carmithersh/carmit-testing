@@ -72,8 +72,4 @@ jobs:
                  echo "${{ vars.CTOA_JF_URL }}/${{ env.DOCKER_REPO }}/${{ env.IMAGE_NAME }}@${{ steps.build.outputs.digest }}" > metadata.json
                  jf rt build-docker-create ${{ env.DOCKER_REPO }} --image-file metadata.json 
                  
-            - name: publish build info
-              run: |
-                jf rt bce 
-                jf rt bp 
-                #jf build-scan  --format sarif --fail=false 
+          
