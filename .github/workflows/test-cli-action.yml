@@ -77,10 +77,3 @@ jobs:
                 jf rt bce 
                 jf rt bp 
                 #jf build-scan  --format sarif --fail=false 
-                  
-            - name: Attest Build Provenance
-              uses: actions/attest-build-provenance@v3
-              with:
-                subject-name: oci://${{ vars.CTOA_JF_URL }}/${{ env.DOCKER_REPO }}/${{ env.IMAGE_NAME }}
-                subject-digest: ${{ steps.build.outputs.digest }}
-
