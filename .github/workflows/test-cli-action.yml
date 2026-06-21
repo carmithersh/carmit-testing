@@ -65,14 +65,7 @@ jobs:
               with:
                 push: true
                 platforms: linux/amd64, linux/arm64
-                tags: ${{ vars.CTOA_JF_URL }}/${{ env.DOCKER_REPO }}/${{ env.IMAGE_NAME }}          
-
-
-            - name: docker scan
-              if: false
-              run: |  
-                 jf docker pull ${{ vars.CTOA_JF_URL }}/${{ env.DOCKER_REPO }}/${{ env.IMAGE_NAME }}
-                 jf docker scan ${{ vars.CTOA_JF_URL }}/${{ env.DOCKER_REPO }}/${{ env.IMAGE_NAME }}                               
+                tags: ${{ vars.CTOA_JF_URL }}/${{ env.DOCKER_REPO }}/${{ env.IMAGE_NAME }}                                     
 
             - name: add docker package to build
               run: |  
