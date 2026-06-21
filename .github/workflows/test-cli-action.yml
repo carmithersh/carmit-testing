@@ -20,7 +20,7 @@ jobs:
               
             - name: Setup JFrog CLI
               id: setup-cli              
-              uses: carmithersh/setup-jfrog-cli@poc-action        
+              uses: carmithersh/setup-jfrog-cli@e6ce68895a2bcdacc80ed2eac019bcfed79880d2 #poc-action        
               env: 
                 JF_URL: https://${{ vars.CTOA_JF_URL }}/
                 JF_PROJECT: pac-ai-generator
