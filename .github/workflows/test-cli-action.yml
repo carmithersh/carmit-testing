@@ -9,7 +9,7 @@ permissions:
   attestations: write  
 jobs:
     build-publish:        
-        runs-on: self-hosted
+        runs-on: ubuntu-latest
         env:
           DOCKER_REPO: 'pac-ai-generator-docker-local'
           IMAGE_NAME_STRIP: 'action-jfrog-testing'
