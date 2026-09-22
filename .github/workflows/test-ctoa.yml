@@ -39,6 +39,7 @@ jobs:
                 echo $VIRTUAL_ENV
 
             - name: Sonar scan
+              if: false              
               uses: SonarSource/sonarqube-scan-action@v5
               continue-on-error: true  # Don't fail build on SonarCloud quality gate issues
               env:
@@ -81,13 +82,7 @@ jobs:
                 platforms: linux/amd64, linux/arm64
                 tags: ${{ vars.CTOA_JF_URL }}/${{ env.DOCKER_REPO }}/${{ env.IMAGE_NAME }}          
 
-
-            - name: docker scan
-              if: false
-              run: |  
-                 jf docker pull ${{ vars.CTOA_JF_URL }}/${{ env.DOCKER_REPO }}/${{ env.IMAGE_NAME }}
-                 jf docker scan ${{ vars.CTOA_JF_URL }}/${{ env.DOCKER_REPO }}/${{ env.IMAGE_NAME }}                               
-
+     
             - name: add docker package to build
               run: |  
                  echo "${{ vars.CTOA_JF_URL }}/${{ env.DOCKER_REPO }}/${{ env.IMAGE_NAME }}@${{ steps.build.outputs.digest }}" > metadata.json
@@ -97,9 +92,9 @@ jobs:
               run: |
                 jf rt bce 
                 jf rt bp 
-                #jf build-scan  --format sarif --fail=false 
 
             - name: Create sonar evidence
+              if: false    
               env:
                 SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
                 SONAR_REPORT_TASK_FILE: ${{ github.workspace }}/examples/sonar-scan/.scannerwork/report-task.txt
