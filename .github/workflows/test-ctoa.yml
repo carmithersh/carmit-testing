@@ -1,4 +1,4 @@
-name: ctoa_test
+name: ctoa_dev_test
 on:
     workflow_dispatch: 
 permissions:
