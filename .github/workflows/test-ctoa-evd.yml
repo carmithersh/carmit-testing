@@ -93,7 +93,7 @@ jobs:
               env: 
                 EVIDENCE_PUBLIC_KEY_ALIAS: ${{ vars.EVIDENCE_PUBLIC_KEY_ALIAS }}
               run: |
-                evd create
+                jf evd create
                 --entity-type "gitCommit"
                 --entity-id "test123"
                 --predicate predicate.json
