@@ -1,0 +1,78 @@
+name: ctoa_evd_test
+on:
+    workflow_dispatch: 
+      inputs:
+        package-repo-name:
+          description: 'Package repository name'
+          required: true
+          default: 'carmit-docker-local'
+        package-name:
+          description: 'Package name'
+          required: true
+          default: 'skills-jfrog-testing'
+        package-version:
+          description: 'Package version'
+          required: true
+          default: '44'
+        project:
+          description: 'Project'
+          required: true
+          default: 'carmit'
+        digest:
+          description: 'Digest'
+          required: true
+          default: 'sha256:b6b65fe935b15ed37c745953a79b8e83ffafca43f62145feb515bb265e2deb68'
+permissions:
+  actions: read # for detecting the Github Actions environment.
+  id-token: write # for creating OIDC tokens for signing.
+  packages: write # for uploading attestations.
+  contents: read
+  attestations: write  
+jobs:
+    create-evd:        
+        runs-on: self-hosted
+        env:
+          PACKAGE_REPO_NAME: ${{ inputs.package-repo-name }}
+          PACKAGE_NAME: ${{ inputs.package-name }}
+          PACKAGE_VERSION: ${{ inputs.package-version }}
+          PROJECT: ${{ inputs.project }}
+        steps:
+            - name: Checkout the repository    
+              uses: actions/checkout@v4
+              
+            - name: Setup JFrog CLI
+              id: setup-cli
+              uses: jfrog/setup-jfrog-cli@v4.9.1
+              env: 
+                JF_URL: https://${{ vars.JF_URL }}/
+                JF_PROJECT: carmit
+              with:
+                  oidc-provider-name: github-carmit-project-1
+       
+          
+
+            - name: Create sonar evidence
+              if: false    
+              env:
+                SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+                SONAR_REPORT_TASK_FILE: ${{ github.workspace }}/examples/sonar-scan/.scannerwork/report-task.txt
+                JFROG_CLI_SIGNING_KEY: ${{ secrets.EVIDENCE_SIGNING_KEY }}
+              run: |
+                # Attach evidence onto docker package using JFrog CLI                
+                jf evd create \
+                --integration sonar \
+                --package-repo-name  "carmit-docker-local"  \
+                --package-name "skills-jfrog-testing" \
+                --package-version "${{ github.run_number }}" \
+                --project "carmit" \
+                --key-alias "${{ vars.EVIDENCE_PUBLIC_KEY_ALIAS }}" 
+            - name: Create predicate file
+              run: |
+                echo '{"content": "mytest", "verdict": "OK"}' > predicate.json
+            - name: Attest generic
+              uses: actions/attest@v4
+              with:
+                subject-path: oci://${{ vars.JF_URL }}/${{ env.PACKAGE_REPO_NAME }}/${{ env.PACKAGE_NAME }}
+                subject-digest: ${{ inputs.digest }}
+                predicate-type: https://jfrog.com/predicate/v1
+                predicate-path: predicate.json
