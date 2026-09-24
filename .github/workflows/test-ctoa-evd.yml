@@ -93,11 +93,11 @@ jobs:
               env: 
                 EVIDENCE_PUBLIC_KEY_ALIAS: ${{ vars.EVIDENCE_PUBLIC_KEY_ALIAS }}
               run: |
-                jf evd create
-                --entity-type "gitCommit"
-                --entity-id "test123"
-                --predicate predicate.json
-                --predicate-type https://jfrog.com/predicate/v1
-                --key ./evidence-signing-key.pem
+                jf evd create \
+                --entity-type "gitCommit" \
+                --entity-id "test123" \
+                --predicate predicate.json \
+                --predicate-type https://jfrog.com/predicate/v1 \
+                --key ./evidence-signing-key.pem \
                 --key-alias "${{ env.EVIDENCE_PUBLIC_KEY_ALIAS }}"
               
