@@ -46,7 +46,7 @@ jobs:
               
             - name: Setup JFrog CLI
               id: setup-cli
-              uses: jfrog/setup-jfrog-cli@v4.9.1
+              uses: jfrog/setup-jfrog-cli@v5.2.0
               env: 
                 JF_URL: https://${{ vars.JF_URL }}/
                 JF_PROJECT: carmit
