@@ -80,7 +80,7 @@ jobs:
               uses: actions/attest@v4
               with:
                 subject-name: "gitCommit://${{ inputs.gitCommit }}"
-                subject-digest: "${{ inputs.gitCommit }}"
+                subject-digest: "sha256:${{ inputs.gitCommit }}"
                 predicate-type: "https://jfrog.com/commit-predicate/v1"
                 predicate-path: predicate.json
             
