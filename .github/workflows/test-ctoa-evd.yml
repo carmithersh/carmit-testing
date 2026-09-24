@@ -72,7 +72,7 @@ jobs:
             - name: Attest generic
               uses: actions/attest@v4
               with:
-                subject-path: oci://${{ vars.JF_URL }}/${{ env.PACKAGE_REPO_NAME }}/${{ env.PACKAGE_NAME }}
+                # subject-path: oci://${{ vars.JF_URL }}/${{ env.PACKAGE_REPO_NAME }}/${{ env.PACKAGE_NAME }}
                 subject-digest: ${{ inputs.digest }}
                 predicate-type: https://jfrog.com/predicate/v1
                 predicate-path: predicate.json
