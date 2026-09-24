@@ -22,6 +22,10 @@ on:
           description: 'Digest'
           required: true
           default: 'sha256:b6b65fe935b15ed37c745953a79b8e83ffafca43f62145feb515bb265e2deb68'
+        gitCommit:
+          description: 'Git commit'
+          required: true
+          default: '1234567890'
 permissions:
   actions: read # for detecting the Github Actions environment.
   id-token: write # for creating OIDC tokens for signing.
@@ -56,7 +60,7 @@ jobs:
               env:
                 SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
                 SONAR_REPORT_TASK_FILE: ${{ github.workspace }}/examples/sonar-scan/.scannerwork/report-task.txt
-                JFROG_CLI_SIGNING_KEY: ${{ secrets.EVIDENCE_SIGNING_KEY }}
+                
               run: |
                 # Attach evidence onto docker package using JFrog CLI                
                 jf evd create \
@@ -70,10 +74,30 @@ jobs:
               run: |
                 echo '{"content": "mytest", "verdict": "OK"}' > predicate.json
             - name: Attest generic
+              if: false
               uses: actions/attest@v4
               with:
                 # subject-path: oci://${{ vars.JF_URL }}/${{ env.PACKAGE_REPO_NAME }}/${{ env.PACKAGE_NAME }}
-                subject-name: oci://${{ vars.JF_URL }}/${{ env.PACKAGE_REPO_NAME }}/${{ env.PACKAGE_NAME }}
+                subject-name: gitCommit://${{ vars.JF_URL }}/${{ env.PACKAGE_REPO_NAME }}/${{ env.PACKAGE_NAME }}
                 subject-digest: ${{ inputs.digest }}
                 predicate-type: https://jfrog.com/predicate/v1
                 predicate-path: predicate.json
+            
+            - name: Write signing key to file
+              env: 
+                EVIDENCE_SIGNING_KEY: ${{ secrets.EVIDENCE_SIGNING_KEY }}
+              run: |                
+                ( umask 077; printf '%s\n' "$EVIDENCE_SIGNING_KEY" > evidence-signing-key.pem )                
+
+            - name: Upload evidence
+              env: 
+                EVIDENCE_PUBLIC_KEY_ALIAS: ${{ vars.EVIDENCE_PUBLIC_KEY_ALIAS }}
+              run: |
+                evd create
+                --entity-type "gitCommit"
+                --entity-id "test123"
+                --predicate predicate.json
+                --predicate-type https://jfrog.com/predicate/v1
+                --key ./evidence-signing-key.pem
+                --key-alias "${{ env.EVIDENCE_PUBLIC_KEY_ALIAS }}"
+              
