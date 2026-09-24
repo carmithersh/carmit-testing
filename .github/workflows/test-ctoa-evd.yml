@@ -88,8 +88,24 @@ jobs:
                 EVIDENCE_SIGNING_KEY: ${{ secrets.EVIDENCE_SIGNING_KEY }}
               run: |                
                 ( umask 077; printf '%s\n' "$EVIDENCE_SIGNING_KEY" > evidence-signing-key.pem )                
+            
+            - name: read runner temp file created_attestation_paths.txt from RUNNER_TEMP and print it
+              run: |
+                cat $RUNNER_TEMP/created_attestation_paths.txt
+                echo "created_attestation_paths.txt content: ${{ env.CREATED_ATTESTATION_PATHS }}"
+            - name: read content of created_attestation_paths.txt and print each line 
+              run: |
+                cat $RUNNER_TEMP/created_attestation_paths.txt | while read line; do
+                  attestation_path=$line
+                  echo "line: $line"
+                  echo "attestation path: $attestation_path"
+                  # print attestation path content
+                  cat $attestation_path
+                done
+                
 
             - name: Upload evidence
+              if: false
               env: 
                 EVIDENCE_PUBLIC_KEY_ALIAS: ${{ vars.EVIDENCE_PUBLIC_KEY_ALIAS }}
                 GIT_COMMIT: ${{ inputs.gitCommit }}
@@ -100,5 +116,6 @@ jobs:
                 --predicate predicate.json \
                 --predicate-type https://jfrog.com/predicate/v1 \
                 --key ./evidence-signing-key.pem \
-                --key-alias "${{ env.EVIDENCE_PUBLIC_KEY_ALIAS }}"
+                --key-alias "${{ env.EVIDENCE_PUBLIC_KEY_ALIAS }}" \
+                --provider-id "github-actions"
               
